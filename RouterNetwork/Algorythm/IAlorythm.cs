@@ -10,5 +10,9 @@ namespace RouterNetwork
     interface IAlgorythm
     {
         void UpdateRoute();
+
+        int GetRoute(int port);
+
+        void UpdateRoute(byte[] readBuffer, int packetSize);
     }
 }
