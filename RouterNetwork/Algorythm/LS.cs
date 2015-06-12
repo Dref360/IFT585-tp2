@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class LSAlgorythm : INetworkAlgorithm
+
+    class LS : IRoutingAlgorithm
     {
+        
         private List<int> nodes;
         private Dictionary<int, int> cost; 
         public void UpdateRoute()
