@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace RouterNetwork
 {
     //DS or LS
-    interface IAlgorythm
+    interface IRoutingAlgorithm
     {
         void UpdateRoute();
 

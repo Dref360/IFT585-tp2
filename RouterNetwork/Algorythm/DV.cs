@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class DVAlgorithm : IAlgorythm
+    class DV : IRoutingAlgorithm
     {
         public void UpdateRoute()
         {
