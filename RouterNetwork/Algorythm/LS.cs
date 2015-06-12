@@ -61,5 +61,15 @@ namespace RouterNetwork
                 nodesToProcess = nodesToProcess.Where(v => v != w).Select(w.BuildPath);
             }
         }
+
+        public int GetRoute(int port)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateRoute(byte[] readBuffer, int packetSize)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

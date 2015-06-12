@@ -12,5 +12,15 @@ namespace RouterNetwork
         {
             throw new NotImplementedException();
         }
+
+        public int GetRoute(int port)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateRoute(byte[] readBuffer, int packetSize)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
