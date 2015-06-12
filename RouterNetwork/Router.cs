@@ -18,11 +18,11 @@ namespace RouterNetwork
         private Dictionary<int, TcpClient> clients;
         private List<int> routerPorts; 
         public int Port { get; set; }
-        public IAlgorythm Algorithm { get; set; }
+        public IRoutingAlgorithm Algorithm { get; set; }
         private Guid guid;
 
 
-        public Router(int port,IAlgorythm algorythm)
+        public Router(int port,IRoutingAlgorithm algorythm)
         {
             Port = port;
             Algorithm = algorythm;
