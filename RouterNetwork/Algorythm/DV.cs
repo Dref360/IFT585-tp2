@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class LSAlgorythm : IAlgorythm
+    class DVAlgorithm : INetworkAlgorithm
     {
-        private List<int> nodes;
-        private Dictionary<int, int> cost; 
         public void UpdateRoute()
         {
-            
+            throw new NotImplementedException();
         }
     }
 }

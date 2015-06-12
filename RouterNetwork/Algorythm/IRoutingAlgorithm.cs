@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class DVAlgorithm : IAlgorythm
+    //DS or LS
+    interface INetworkAlgorithm
     {
-        public void UpdateRoute()
-        {
-            throw new NotImplementedException();
-        }
+        void UpdateRoute();
     }
 }

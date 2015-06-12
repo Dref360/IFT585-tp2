@@ -42,10 +42,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CostConfiguration.cs" />
-    <Compile Include="Algorythm\DVAlgorithm.cs" />
+    <Compile Include="Algorythm\DV.cs" />
     <Compile Include="Host.cs" />
-    <Compile Include="Algorythm\IAlorythm.cs" />
-    <Compile Include="Algorythm\LSAlgorythm.cs" />
+    <Compile Include="Algorythm\IRoutingAlgorithm.cs" />
+    <Compile Include="Algorythm\LS.cs" />
     <Compile Include="Network.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
