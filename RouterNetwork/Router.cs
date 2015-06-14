@@ -51,8 +51,8 @@ namespace RouterNetwork
                     }
                     else
                     {
-                        int next = Algorithm.GetRoute(destPort);
-                        SendData(next, readBuffer,packetSize);
+                        //int next = Algorithm.GetRoute(destPort);
+                        //SendData(next, readBuffer,packetSize);
                     }
                 }
             }
@@ -60,7 +60,7 @@ namespace RouterNetwork
 
         private void UpdateMap(byte[] readBuffer, int packetSize)
         {
-            Algorithm.UpdateRoute(readBuffer,packetSize);
+            //Algorithm.UpdateRoute(readBuffer,packetSize);
         }
 
         private void SendData(int next, byte[] readBuffer,int size)

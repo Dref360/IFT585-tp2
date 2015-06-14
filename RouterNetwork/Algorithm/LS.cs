@@ -8,26 +8,15 @@ namespace RouterNetwork
 {
     class LS : IRoutingAlgorithm
     {
-        private class Node : IComparable<Node>
+        private class LSNode : RoutingNode
         {
-            public Guid RouterId { get; set; }
             public Guid OldRoute { get; set; }
-            public int Cost { get; set; }
-            public override int GetHashCode()
-            {
-                return RouterId.GetHashCode();
-            }
-
-            public int CompareTo(Node other)
-            {
-                return Cost.CompareTo(other.Cost);
-            }
-            public Node BuildPath(Node other)
+            public LSNode BuildPath(LSNode other)
             {
                 int newCost = other.Cost + Cost(this.RouterId, other.RouterId);
-                if (IsAdjacent(this.RouterId,other.RouterId) && newCost < this.Cost)
+                if (IsAdjacent(this.RouterId, other.RouterId) && newCost < this.Cost)
                 {
-                    return new Node()
+                    return new LSNode()
                     {
                         RouterId = RouterId,
                         OldRoute = other.RouterId,
@@ -41,33 +30,50 @@ namespace RouterNetwork
 
             }
         }
-        IEnumerable<Guid> Graph();
-        static bool IsAdjacent(Guid a, Guid b);
-        static int Cost(Guid a, Guid b);
+        IEnumerable<Guid> Graph()
+        {
+            yield return new Guid();
+        }
+        static bool IsAdjacent(Guid a, Guid b)
+        {
+            return true;
+        }
+        static int Cost(Guid a, Guid b)
+        {
+            return 0;
+        }
         public void UpdateRoute()
         {
-            var processedNodes = new HashSet<Node>();
+            var processedNodes = new HashSet<LSNode>();
             var nodes = new Guid();
-            var nodesToProcess = Graph().Where(x => x != nodes).Select(p => new Node()
+            var nodesToProcess = Graph().Where(x => x != nodes).Select(id => new LSNode()
                 {
-                    RouterId = p,
-                    Cost = IsAdjacent(nodes, p) ? Cost(nodes, p) : int.MaxValue
+                    RouterId = id,
+                    Cost = IsAdjacent(nodes, id) ? Cost(nodes, id) : int.MaxValue
                 });
             int numberOfNodes = nodesToProcess.Count();
             while (numberOfNodes > processedNodes.Count)
             {
                 var w = nodesToProcess.Where(n => !processedNodes.Contains(n)).Min();
                 processedNodes.Add(w);
-                nodesToProcess = nodesToProcess.Where(v => v != w).Select(w.BuildPath);
+                nodesToProcess = nodesToProcess.Where(v => v != w).Select(w.BuildPath).Concat(new LSNode[] { w });
             }
         }
 
-        public int GetRoute(int port)
+        public void CreateRoutingTable(AdjacencyTable table)
         {
             throw new NotImplementedException();
         }
 
-        public void UpdateRoute(byte[] readBuffer, int packetSize)
+        public EventHandler<MessageArgs> SendMessage { get; set; }
+
+        public void HandleRequests(MessageArgs message)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public Guid GetRoute(Guid id)
         {
             throw new NotImplementedException();
         }

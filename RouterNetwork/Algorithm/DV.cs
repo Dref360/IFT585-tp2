@@ -8,17 +8,19 @@ namespace RouterNetwork
 {
     class DV : IRoutingAlgorithm
     {
-        public void UpdateRoute()
+        public void CreateRoutingTable(AdjacencyTable table)
         {
             throw new NotImplementedException();
         }
 
-        public int GetRoute(int port)
+        public EventHandler<MessageArgs> SendMessage { get; set; }
+        public void HandleRequests(MessageArgs message)
         {
             throw new NotImplementedException();
         }
 
-        public void UpdateRoute(byte[] readBuffer, int packetSize)
+
+        public Guid GetRoute(Guid id)
         {
             throw new NotImplementedException();
         }
