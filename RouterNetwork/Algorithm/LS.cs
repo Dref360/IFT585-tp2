@@ -1,38 +1,29 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class LS : IRoutingAlgorithm
+    class LSRouter : Router
     {
         private class LSNode : RoutingNode
         {
             public Guid OldRoute { get; set; }
-            public LSNode BuildPath(LSNode other)
+            public void BuildPath(LSNode other)
             {
                 int newCost = other.Cost + Cost(this.RouterId, other.RouterId);
                 if (IsAdjacent(this.RouterId, other.RouterId) && newCost < this.Cost)
                 {
-                    return new LSNode()
-                    {
-                        RouterId = RouterId,
-                        OldRoute = other.RouterId,
-                        Cost = newCost
-                    };
+                    OldRoute = other.RouterId;
+                    this.Cost = newCost;
                 }
-                else
-                {
-                    return this;
-                }
-
             }
-        }
-        IEnumerable<Guid> Graph()
-        {
-            yield return new Guid();
         }
         static bool IsAdjacent(Guid a, Guid b)
         {
@@ -42,40 +33,56 @@ namespace RouterNetwork
         {
             return 0;
         }
-        public void UpdateRoute()
-        {
-            var processedNodes = new HashSet<LSNode>();
-            var nodes = new Guid();
-            var nodesToProcess = Graph().Where(x => x != nodes).Select(id => new LSNode()
-                {
-                    RouterId = id,
-                    Cost = IsAdjacent(nodes, id) ? Cost(nodes, id) : int.MaxValue
-                });
-            int numberOfNodes = nodesToProcess.Count();
-            while (numberOfNodes > processedNodes.Count)
-            {
-                var w = nodesToProcess.Where(n => !processedNodes.Contains(n)).Min();
-                processedNodes.Add(w);
-                nodesToProcess = nodesToProcess.Where(v => v != w).Select(w.BuildPath).Concat(new LSNode[] { w });
-            }
-        }
-
+        private IEnumerable<LSNode> Nodes;
+        private List<AdjacencyTable> graph;
+        private object nodesLock;
         public void CreateRoutingTable(AdjacencyTable table)
         {
-            throw new NotImplementedException();
+            var processedNodes = new HashSet<LSNode>();
+            Nodes = table.Nodes.Cast<LSNode>();
+            int numberOfNodes = Nodes.Count();
+            while (numberOfNodes > processedNodes.Count)
+            {
+                var w = Nodes.Where(n => !processedNodes.Contains(n)).Min();
+                lock (nodesLock)
+                {
+                    foreach (var node in Nodes.Where(v => v != w))
+                    {
+                        w.BuildPath(node);
+                    }
+                }
+                processedNodes.Add(w);
+            }
         }
 
         public EventHandler<MessageArgs> SendMessage { get; set; }
 
         public void HandleRequests(MessageArgs message)
         {
-            throw new NotImplementedException();
+            var bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, graph);
+                SendMessage(this, new MessageArgs()
+                    {
+                        Data = ms.ToArray(),
+                        Receiver = message.Receiver,//Sender
+                    });
+            }
+        }
+
+        private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
+        {
+            return adjacentNodes;
         }
 
 
         public Guid GetRoute(Guid id)
         {
-            throw new NotImplementedException();
+            lock (nodesLock)
+            {
+                return Nodes.First(x => x.RouterId == id).OldRoute;
+            }
         }
     }
 }
