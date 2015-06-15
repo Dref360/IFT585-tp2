@@ -12,87 +12,117 @@ namespace RouterNetwork
     {
         LS,DV
     }
+
+    enum Header
+    {
+        NEW = 0,
+        UPDATE =1,
+        DATA = 2
+    }
     class Router
     {
-        private List<List<int>> neighborhood;
-        private Dictionary<int, TcpClient> clients;
-        private List<int> routerPorts; 
-        public int Port { get; set; }
+        private Dictionary<Guid, int> routersPort;
+        private List<TcpListener> listeners; 
+
+        public List<int> Ports { get; set; }
         public IRoutingAlgorithm Algorithm { get; set; }
         private Guid guid;
 
 
-        public Router(int port,IRoutingAlgorithm algorythm)
+        public Router(IRoutingAlgorithm algorythm, int[] ports)
         {
-            Port = port;
+            Ports = ports.ToList();
             Algorithm = algorythm;
-            neighborhood = new List<List<int>>();
-            routerPorts = new List<int>();
-            clients = new Dictionary<int, TcpClient>();
+            routersPort = new Dictionary<Guid, int>();
             guid = new Guid();
+            listeners = new List<TcpListener>();
+            Algorithm.SendMessage += SendMessage;
+            StartListening();
         }
 
-        public void Listen(TcpClient client,int port)
+        private void SendMessage(object sender, MessageArgs e)
+        {
+            if (!routersPort.ContainsKey(e.Receiver))
+            {
+                Console.WriteLine("On a pas ce routeur (Bruno que fais-tu?)");
+                return;
+            }
+            byte[] msg = e.Header.Concat(e.Data).ToArray();
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any,0);
+            TcpClient client = new TcpClient(endPoint);
+            client.Connect(IPAddress.Loopback,routersPort[e.Receiver]);
+            client.GetStream().Write(msg,0,msg.Length);
+            if (e.ExpectResponse)
+            {
+                bool received = false;
+                byte[] data = new byte[65000];
+                var allBytes = new List<byte>();
+                var stream = client.GetStream();
+                int i;
+                while ((i = stream.Read(data, 0, data.Length)) != 0 && !received)
+                {
+                    received = true;
+                    allBytes.AddRange(allBytes.Take(i));
+                }
+            }
+        }
+
+        public void InitializeLS(List<RoutingNode> routers)
+        {
+            
+        }
+
+        public void InitializeDV(List<RoutingNode> routers)
+        {
+
+        }
+
+        private void StartListening()
+        {
+            foreach (var port in Ports)
+            {
+                TcpListener listener = new TcpListener(IPAddress.Loopback,port);
+                listeners.Add(listener);
+                Task.Factory.StartNew(() => AcceptConnection(listener));
+            }
+        }
+
+        private void AcceptConnection(TcpListener listener)
         {
             while (true)
             {
-                byte[] readBuffer = new byte[client.ReceiveBufferSize];
-                int packetSize = client.GetStream().Read(readBuffer, 0, readBuffer.Length);
-                if (readBuffer[0] == 1)
+                byte[] bytes = new byte[64000];
+                TcpClient sock = listener.AcceptTcpClient();
+                var stream = sock.GetStream();
+                List<byte> allBytes = new List<byte>(64000);
+                int i;
+                bool received = false;
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0 && !received)
                 {
-                    UpdateMap(readBuffer, packetSize);
+                    received = true;
+                    allBytes.AddRange(allBytes.Take(i));
                 }
-                else
+                switch (allBytes[0])
                 {
-                    int destPort = BitConverter.ToInt32(readBuffer, 1);
-                    if (routerPorts.Any(n => n == destPort))
-                    {
-                        //ON a un msg TODO
-                    }
-                    else
-                    {
-                        //int next = Algorithm.GetRoute(destPort);
-                        //SendData(next, readBuffer,packetSize);
-                    }
+                    //New router
+                    case 0:
+                        break;
+                    //Update Map
+                    case 1:
+                        break;
+                    //We have data
+                    case 2:
+                        break;
                 }
+                sock.Close();
             }
         }
 
-        private void UpdateMap(byte[] readBuffer, int packetSize)
+
+        public void Link(Guid router,int port)
         {
-            //Algorithm.UpdateRoute(readBuffer,packetSize);
+            routersPort[router] = port;
         }
 
-        private void SendData(int next, byte[] readBuffer,int size)
-        {
-            if (clients.ContainsKey(next))
-            {
-                clients[next].GetStream().Write(readBuffer,0,size);
-            }
-            else
-            {
-                Console.WriteLine("ERROR:On a pas ce routeur {0}",next);
-            }
-        }
-
-        public void Link(int portThis,int portDestination,int cost)
-        {
-            routerPorts.Add(portThis);
-            neighborhood[portThis][portDestination] = cost;
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, portThis);
-            TcpClient tcpClient = new TcpClient(endPoint);
-            clients[portDestination] = tcpClient;
-            tcpClient.Connect(IPAddress.Loopback, portDestination);
-            Task.Factory.StartNew(() => Listen(tcpClient,portDestination));
-            SendTable();
-        }
-
-        private void SendTable()
-        {
-            byte[] map;
-            foreach (var voisin in neighborhood)
-            {
-            }
-        }
     }
 }
