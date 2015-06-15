@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,7 +49,8 @@ namespace RouterNetwork
                 Console.WriteLine("On a pas ce routeur (Bruno que fais-tu?)");
                 return;
             }
-            byte[] msg = e.Header.Concat(e.Data).ToArray();
+            e.Sender = this.guid;
+            byte[] msg = SerializeMsg(e);
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any,0);
             TcpClient client = new TcpClient(endPoint);
             client.Connect(IPAddress.Loopback,routersPort[e.Receiver]);
@@ -59,11 +62,35 @@ namespace RouterNetwork
                 var allBytes = new List<byte>();
                 var stream = client.GetStream();
                 int i;
-                while ((i = stream.Read(data, 0, data.Length)) != 0 && !received)
+                while ((i = stream.Read(data, 0, data.Length)) != 0 || !received)
                 {
+                    if (i == 0)
+                        continue;
                     received = true;
-                    allBytes.AddRange(allBytes.Take(i));
+                    allBytes.AddRange(data.Take(i));
                 }
+                //Deserialize msg
+                Algorithm.HandleRequests(DeserializeMessageArgs(allBytes.ToArray()));
+            }
+            client.Close();
+        }
+
+        private MessageArgs DeserializeMessageArgs(byte[] allBytes)
+        {
+            using (MemoryStream ms = new MemoryStream(allBytes))
+            {
+                BinaryFormatter fmt = new BinaryFormatter();
+                return fmt.Deserialize(ms) as MessageArgs;
+            }
+        }
+
+        private byte[] SerializeMsg(MessageArgs messageArgs)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(ms,messageArgs);
+                return ms.ToArray();
             }
         }
 
@@ -97,22 +124,12 @@ namespace RouterNetwork
                 List<byte> allBytes = new List<byte>(64000);
                 int i;
                 bool received = false;
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0 && !received)
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0 || !received)
                 {
+                    if (i == 0)
+                        continue;
                     received = true;
-                    allBytes.AddRange(allBytes.Take(i));
-                }
-                switch (allBytes[0])
-                {
-                    //New router
-                    case 0:
-                        break;
-                    //Update Map
-                    case 1:
-                        break;
-                    //We have data
-                    case 2:
-                        break;
+                    allBytes.AddRange(bytes.Take(i));
                 }
                 sock.Close();
             }
