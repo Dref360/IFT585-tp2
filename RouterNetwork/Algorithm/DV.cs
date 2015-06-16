@@ -115,30 +115,29 @@ namespace RouterNetwork
             }
         }
 
+
+
         public DV(AdjacencyTable table, int[] ports, IEnumerable<Guid> ids)
             : base(table, ports)
         {
 
         }
 
-
-
-        AdjacencyTable adjacencyTable;
         CostTable costTable;
 
-        public override void CreateRoutingTable(AdjacencyTable table)
+        public override void CreateRoutingTable()
         {
-            adjacencyTable = table;
             //FAUT POGNER LA LISTE DES ROUTEURS
-            costTable = new CostTable(null/*hihi*/, table);
+            costTable = new CostTable(null/*hihi*/, Table);
             SendTable();
         }
 
-        public override void HandleRoutingRequests(MessageArgs message)
+        public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
             CostTable otherCosts = ReceiveMessage(message);
             if (costTable.UpdateTable(otherCosts))
                 SendTable();
+            return null;
         }
 
         protected override Guid GetRoute(Guid id)
@@ -148,7 +147,7 @@ namespace RouterNetwork
 
         private void SendTable()
         {
-            foreach (RoutingNode adjacent in adjacencyTable.Nodes)
+            foreach (RoutingNode adjacent in Table.Nodes)
             {
                 CostTable poisonedTable = costTable;
                 poisonedTable.Poison(adjacent);
