@@ -34,6 +34,11 @@ namespace RouterNetwork
             listeners = new List<TcpListener>();
         }
 
+        public void Start()
+        {
+            Task.Factory.StartNew(sender.CreateRoutingTable);
+        }
+
 
         public void StartListening()
         {

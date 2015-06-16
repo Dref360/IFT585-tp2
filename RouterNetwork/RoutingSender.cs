@@ -14,13 +14,18 @@ namespace RouterNetwork
     {
         private Guid Id;
         private Dictionary<Guid, int> routerPorts;
+        protected AdjacencyTable Table { get; set; }
+        private int p1;
+        private int p2;
+        private int p3;
         public List<int> Ports { get; set; }
 
         
 
 
-        public RoutingSender(params int[] ports)
+        public RoutingSender(AdjacencyTable table, int[] ports)
         {
+            Table = table;
             routerPorts = new Dictionary<Guid, int>();
             Ports = ports.ToList();
         }
@@ -96,7 +101,7 @@ namespace RouterNetwork
         /// Crée la table de routage pour une représentation interne de la table
         /// </summary>
         /// <param name="table"></param>
-        abstract public void CreateRoutingTable(AdjacencyTable table);
+        public abstract void CreateRoutingTable();
 
     }
 }

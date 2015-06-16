@@ -26,10 +26,10 @@ namespace RouterNetwork
             }
         }
 
-        public LSSender(params int[] ports)
-            : base(ports)
+        public LSSender(AdjacencyTable table, int[] ports, IEnumerable<AdjacencyTable> graph)
+            : base(table, ports)
         {
-
+            this.graph = graph.ToList();
         }
 
         static bool IsAdjacent(Guid a, Guid b)
@@ -43,10 +43,10 @@ namespace RouterNetwork
         private IEnumerable<LSNode> Nodes;
         private List<AdjacencyTable> graph;
         private object nodesLock = new object();
-        public override void CreateRoutingTable(AdjacencyTable table)
+        public override void CreateRoutingTable()
         {
             var processedNodes = new HashSet<LSNode>();
-            Nodes = table.Nodes.Cast<LSNode>();
+            Nodes = Table.Nodes.Cast<LSNode>();
             int numberOfNodes = Nodes.Count();
             while (numberOfNodes > processedNodes.Count)
             {

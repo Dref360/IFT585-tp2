@@ -102,6 +102,12 @@ namespace RouterNetwork
             }
         }
 
+        public DV(AdjacencyTable table, int[] ports, IEnumerable<Guid> ids)
+            : base(table, ports)
+        {
+
+        }
+
         CostTable costTable;
 
         public override void CreateRoutingTable(AdjacencyTable table)
