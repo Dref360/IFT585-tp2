@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,6 +10,7 @@ namespace RouterNetwork
 {
     class DV : RoutingSender
     {
+        [Serializable]
         private class CostTable
         {
             private Guid id;
@@ -32,7 +35,7 @@ namespace RouterNetwork
                 for (int i = 0; i < routers.Count; i++)
                 {
                     rowDestination.Add(routers[i].RouterId, i);
-                    for (int j = 0; j < adjacents.Count;j++)
+                    for (int j = 0; j < adjacents.Count; j++)
                         costs[i, j] = int.MaxValue;
                 }
                 for (int i = 0; i < adjacents.Count; i++)
@@ -84,6 +87,16 @@ namespace RouterNetwork
             }
 
             /// <summary>
+            /// Empoisonne les couts de la table pour un routeur adjacent
+            /// </summary>
+            /// <param name="adjacent"></param>
+            public void Poison(RoutingNode adjacent)
+            {
+                foreach (Guid destination in rowDestination.Keys)
+                    this[destination, adjacent.RouterId] = int.MaxValue;
+            }
+
+            /// <summary>
             /// Permet d'utiliser la table des couts avec les id des routeurs
             /// </summary>
             /// <param name="destination">routeur destination</param>
@@ -102,23 +115,24 @@ namespace RouterNetwork
             }
         }
 
+
+
+        AdjacencyTable adjacencyTable;
         CostTable costTable;
 
         public override void CreateRoutingTable(AdjacencyTable table)
         {
+            adjacencyTable = table;
             //FAUT POGNER LA LISTE DES ROUTEURS
             costTable = new CostTable(null/*hihi*/, table);
-            //SEND
+            SendTable();
         }
 
-        public override void HandleRoutingRequests(MessageArgs args)
+        public override void HandleRoutingRequests(MessageArgs message)
         {
-            //RECEIVE
-            CostTable otherCosts = null; //hihi
+            CostTable otherCosts = ReceiveMessage(message);
             if (costTable.UpdateTable(otherCosts))
-            {
-                //SEND
-            }
+                SendTable();
         }
 
         protected override Guid GetRoute(Guid id)
@@ -126,9 +140,36 @@ namespace RouterNetwork
             return costTable.BestPath(id).RouterId;
         }
 
-        private void SerialiseTable()
+        private void SendTable()
         {
+            foreach (RoutingNode adjacent in adjacencyTable.Nodes)
+            {
+                CostTable poisonedTable = costTable;
+                poisonedTable.Poison(adjacent);
 
+                BinaryFormatter bf = new BinaryFormatter();
+                using (var ms = new MemoryStream())
+                {
+                    bf.Serialize(ms, poisonedTable);
+                    SendMessage(new MessageArgs()
+                    {
+                        Data = ms.ToArray(),
+                        Receiver = adjacent.RouterId
+                    });
+                }
+            }
+        }
+
+        private CostTable ReceiveMessage(MessageArgs message)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                BinaryFormatter binForm = new BinaryFormatter();
+                memStream.Write(message.Data, 0, message.Data.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                Object obj = binForm.Deserialize(memStream);
+                return (CostTable)obj;
+            }
         }
     }
 }
