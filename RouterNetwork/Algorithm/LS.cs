@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class LSRouter : Router
+    class LSSender : RoutingSender
     {
         private class LSNode : RoutingNode
         {
@@ -25,6 +25,13 @@ namespace RouterNetwork
                 }
             }
         }
+
+        public LSSender(params int[] ports)
+            : base(ports)
+        {
+
+        }
+
         static bool IsAdjacent(Guid a, Guid b)
         {
             return true;
@@ -35,8 +42,8 @@ namespace RouterNetwork
         }
         private IEnumerable<LSNode> Nodes;
         private List<AdjacencyTable> graph;
-        private object nodesLock;
-        public void CreateRoutingTable(AdjacencyTable table)
+        private object nodesLock = new object();
+        public override void CreateRoutingTable(AdjacencyTable table)
         {
             var processedNodes = new HashSet<LSNode>();
             Nodes = table.Nodes.Cast<LSNode>();
@@ -54,34 +61,31 @@ namespace RouterNetwork
                 processedNodes.Add(w);
             }
         }
+        private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
+        {
+            yield return new AdjacencyTable(new Guid(),Enumerable.Empty<RoutingNode>());
+        }
 
-        public EventHandler<MessageArgs> SendMessage { get; set; }
 
-        public void HandleRequests(MessageArgs message)
+        protected override Guid GetRoute(Guid id)
+        {
+            lock (nodesLock)
+            {
+                return Nodes.First(x => x.RouterId == id).OldRoute;
+            }
+        }
+
+        public override void HandleRoutingRequests(MessageArgs message)
         {
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
             {
                 bf.Serialize(ms, graph);
-                SendMessage(this, new MessageArgs()
-                    {
-                        Data = ms.ToArray(),
-                        Receiver = message.Receiver,//Sender
-                    });
-            }
-        }
-
-        private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
-        {
-            return adjacentNodes;
-        }
-
-
-        public Guid GetRoute(Guid id)
-        {
-            lock (nodesLock)
-            {
-                return Nodes.First(x => x.RouterId == id).OldRoute;
+                SendMessage(new MessageArgs()
+                {
+                    Data = ms.ToArray(),
+                    Receiver = message.Receiver,//Sender
+                });
             }
         }
     }

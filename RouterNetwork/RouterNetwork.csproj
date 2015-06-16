@@ -46,7 +46,6 @@
     <Compile Include="CostConfiguration.cs" />
     <Compile Include="Algorithm\DV.cs" />
     <Compile Include="Host.cs" />
-    <Compile Include="Algorithm\IRoutingAlgorithm.cs" />
     <Compile Include="Algorithm\LS.cs" />
     <Compile Include="MessageArgs.cs" />
     <Compile Include="Network.cs" />
@@ -54,9 +53,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Router.cs" />
     <Compile Include="RoutingNode.cs" />
+    <Compile Include="RoutingSender.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

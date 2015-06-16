@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
-    class DV : IRoutingAlgorithm
+    class DV : RoutingSender
     {
         private class CostTable
         {
@@ -104,15 +104,14 @@ namespace RouterNetwork
 
         CostTable costTable;
 
-        public void CreateRoutingTable(AdjacencyTable table)
+        public override void CreateRoutingTable(AdjacencyTable table)
         {
             //FAUT POGNER LA LISTE DES ROUTEURS
             costTable = new CostTable(null/*hihi*/, table);
             //SEND
         }
 
-        public EventHandler<MessageArgs> SendMessage { get; set; }
-        public void HandleRequests(MessageArgs message)
+        public override void HandleRoutingRequests(MessageArgs args)
         {
             //RECEIVE
             CostTable otherCosts = null; //hihi
@@ -122,7 +121,7 @@ namespace RouterNetwork
             }
         }
 
-        public Guid GetRoute(Guid id)
+        protected override Guid GetRoute(Guid id)
         {
             return costTable.BestPath(id).RouterId;
         }
