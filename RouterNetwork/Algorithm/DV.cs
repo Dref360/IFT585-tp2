@@ -115,6 +115,12 @@ namespace RouterNetwork
             }
         }
 
+        public DV(AdjacencyTable table, int[] ports, IEnumerable<Guid> ids)
+            : base(table, ports)
+        {
+
+        }
+
 
 
         AdjacencyTable adjacencyTable;

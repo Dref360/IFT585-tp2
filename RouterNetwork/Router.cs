@@ -34,6 +34,11 @@ namespace RouterNetwork
             listeners = new List<TcpListener>();
         }
 
+        public void Start()
+        {
+            Task.Factory.StartNew(sender.CreateRoutingTable);
+        }
+
 
         public void StartListening()
         {
@@ -61,6 +66,15 @@ namespace RouterNetwork
                         continue;
                     received = true;
                     allBytes.AddRange(bytes.Take(i));
+                }
+                var msg = MessageArgs.DeserializeMessageArgs(allBytes.ToArray());
+                var response = sender.HandleRoutingRequests(msg);
+                if (msg.ExpectResponse)
+                {
+                    if(response == null)
+                        Console.WriteLine("L'autre routeur veut une reponse, mais la réponse est vide");
+                    byte[] data = response.SerializeMsg();
+                    stream.Write(data, 0, data.Length);
                 }
                 sock.Close();
             }

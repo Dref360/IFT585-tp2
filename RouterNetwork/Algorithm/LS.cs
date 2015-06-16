@@ -26,10 +26,10 @@ namespace RouterNetwork
             }
         }
 
-        public LSSender(params int[] ports)
-            : base(ports)
+        public LSSender(AdjacencyTable table, int[] ports, IEnumerable<AdjacencyTable> graph)
+            : base(table, ports)
         {
-
+            this.graph = graph.ToList();
         }
 
         static bool IsAdjacent(Guid a, Guid b)
@@ -43,10 +43,10 @@ namespace RouterNetwork
         private IEnumerable<LSNode> Nodes;
         private List<AdjacencyTable> graph;
         private object nodesLock = new object();
-        public override void CreateRoutingTable(AdjacencyTable table)
+        public override void CreateRoutingTable()
         {
             var processedNodes = new HashSet<LSNode>();
-            Nodes = table.Nodes.Cast<LSNode>();
+            Nodes = Table.Nodes.Cast<LSNode>();
             int numberOfNodes = Nodes.Count();
             while (numberOfNodes > processedNodes.Count)
             {
@@ -63,7 +63,14 @@ namespace RouterNetwork
         }
         private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
         {
-            yield return new AdjacencyTable(new Guid(),Enumerable.Empty<RoutingNode>());
+            foreach (var node in adjacentNodes)
+            {
+                SendMessage(new MessageArgs()
+                    {
+                        Receiver = node.RouterId
+                    });
+                yield return new AdjacencyTable(new Guid(), adjacentNodes);
+            }
         }
 
 
@@ -75,7 +82,7 @@ namespace RouterNetwork
             }
         }
 
-        public override void HandleRoutingRequests(MessageArgs message)
+        public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
@@ -86,6 +93,7 @@ namespace RouterNetwork
                     Data = ms.ToArray(),
                     Receiver = message.Receiver,//Sender
                 });
+                return null;
             }
         }
     }
