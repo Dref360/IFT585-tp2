@@ -111,7 +111,7 @@ namespace RouterNetwork
             //SEND
         }
 
-        public override void HandleRoutingRequests(MessageArgs args)
+        public override MessageArgs HandleRoutingRequests(MessageArgs args)
         {
             //RECEIVE
             CostTable otherCosts = null; //hihi
@@ -119,6 +119,7 @@ namespace RouterNetwork
             {
                 //SEND
             }
+            return null;
         }
 
         protected override Guid GetRoute(Guid id)

@@ -24,34 +24,17 @@ namespace RouterNetwork
             routerPorts = new Dictionary<Guid, int>();
             Ports = ports.ToList();
         }
-        private MessageArgs DeserializeMessageArgs(byte[] allBytes)
-        {
-            using (MemoryStream ms = new MemoryStream(allBytes))
-            {
-                BinaryFormatter fmt = new BinaryFormatter();
-                return fmt.Deserialize(ms) as MessageArgs;
-            }
-        }
 
-        private byte[] SerializeMsg(MessageArgs messageArgs)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(ms, messageArgs);
-                return ms.ToArray();
-            }
-        }
 
-        public void SendMessage(MessageArgs message)
+        public MessageArgs SendMessageWithAnswer(MessageArgs message)
         {
             if (!routerPorts.ContainsKey(message.Receiver))
             {
                 Console.WriteLine("On a pas ce routeur (Bruno que fais-tu?)");
-                return;
+                return null;
             }
             message.Sender = this.Id;
-            byte[] msg = SerializeMsg(message);
+            byte[] msg = message.SerializeMsg();
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
             TcpClient client = new TcpClient(endPoint);
             client.Connect(IPAddress.Loopback, routerPorts[message.Receiver]);
@@ -71,8 +54,25 @@ namespace RouterNetwork
                     allBytes.AddRange(data.Take(i));
                 }
                 //Deserialize msg
-                HandleRoutingRequests(DeserializeMessageArgs(allBytes.ToArray()));
+                return MessageArgs.DeserializeMessageArgs(allBytes.ToArray());
             }
+            client.Close();
+            return null;
+        }
+
+        public void SendMessage(MessageArgs message)
+        {
+            if (!routerPorts.ContainsKey(message.Receiver))
+            {
+                Console.WriteLine("On a pas ce routeur (Bruno que fais-tu?)");
+                return;
+            }
+            message.Sender = this.Id;
+            byte[] msg = message.SerializeMsg();
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
+            TcpClient client = new TcpClient(endPoint);
+            client.Connect(IPAddress.Loopback, routerPorts[message.Receiver]);
+            client.GetStream().Write(msg, 0, msg.Length);
             client.Close();
         }
 
@@ -91,7 +91,7 @@ namespace RouterNetwork
         /// Traite les requêtes de table de routage
         /// </summary>
         /// <param name="message"></param>
-        abstract public void HandleRoutingRequests(MessageArgs args);
+        abstract public MessageArgs HandleRoutingRequests(MessageArgs args);
         /// <summary>
         /// Crée la table de routage pour une représentation interne de la table
         /// </summary>
