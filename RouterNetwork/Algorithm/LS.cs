@@ -82,7 +82,7 @@ namespace RouterNetwork
             }
         }
 
-        public override void HandleRoutingRequests(MessageArgs message)
+        public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
@@ -93,6 +93,7 @@ namespace RouterNetwork
                     Data = ms.ToArray(),
                     Receiver = message.Receiver,//Sender
                 });
+                return null;
             }
         }
     }
