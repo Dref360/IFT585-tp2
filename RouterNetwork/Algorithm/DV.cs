@@ -23,7 +23,7 @@ namespace RouterNetwork
             /// </summary>
             /// <param name="routers">La liste de tous les routeurs</param>
             /// <param name="adjacencyTable">La table des routeurs adjacents</param>
-            public CostTable(IList<RoutingNode> routers, AdjacencyTable adjacencyTable)
+            public CostTable(IList<Guid> routers, AdjacencyTable adjacencyTable)
             {
                 id = adjacencyTable.Id;
                 IList<RoutingNode> adjacents = adjacencyTable.Nodes as IList<RoutingNode>;
@@ -34,7 +34,7 @@ namespace RouterNetwork
                 //initailisation de la table de couts et des adjacents/destination
                 for (int i = 0; i < routers.Count; i++)
                 {
-                    rowDestination.Add(routers[i].RouterId, i);
+                    rowDestination.Add(routers[i], i);
                     for (int j = 0; j < adjacents.Count; j++)
                         costs[i, j] = int.MaxValue;
                 }
@@ -115,21 +115,20 @@ namespace RouterNetwork
             }
         }
 
-
+        IEnumerable<Guid> ids;
+        CostTable costTable;
 
         public DV(AdjacencyTable table, int[] ports, IEnumerable<Guid> ids)
             : base(table, ports)
         {
-
+            this.ids = ids;
         }
-
-        CostTable costTable;
 
         public override void CreateRoutingTable()
         {
-            //FAUT POGNER LA LISTE DES ROUTEURS
-            costTable = new CostTable(null/*hihi*/, Table);
+            costTable = new CostTable(ids.ToList(), Table);
             SendTable();
+            Console.WriteLine("Table de routage initiale créée");
         }
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
@@ -137,6 +136,7 @@ namespace RouterNetwork
             CostTable otherCosts = ReceiveMessage(message);
             if (costTable.UpdateTable(otherCosts))
                 SendTable();
+            Console.WriteLine("Table de routage mis à jour");
             return null;
         }
 
