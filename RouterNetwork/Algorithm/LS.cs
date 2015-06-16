@@ -63,7 +63,14 @@ namespace RouterNetwork
         }
         private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
         {
-            yield return new AdjacencyTable(new Guid(),Enumerable.Empty<RoutingNode>());
+            foreach (var node in adjacentNodes)
+            {
+                SendMessage(new MessageArgs()
+                    {
+                        Receiver = node.RouterId
+                    });
+                yield return new AdjacencyTable(new Guid(), adjacentNodes);
+            }
         }
 
 

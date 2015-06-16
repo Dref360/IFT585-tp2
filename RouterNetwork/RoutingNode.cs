@@ -23,5 +23,16 @@ namespace RouterNetwork
         {
             return Cost.CompareTo(other.Cost);
         }
+
+        public RoutingNode(Guid routerId, int cost)
+        {
+            RouterId = routerId;
+            Cost = cost;
+        }
+
+        public RoutingNode()
+        {
+
+        }
     }
 }
