@@ -22,7 +22,12 @@ namespace RouterNetwork
                 return NetworkCosts[Tuple.Create(port1, port2)];
             if (NetworkCosts.ContainsKey(Tuple.Create(port2, port1)))
                 return NetworkCosts[Tuple.Create(port2, port1)];
-            return 0;
+            return 1000000;
+        }
+
+        public static IEnumerable<int> SameRouter(int port)
+        {
+            return AllPorts.Where(x => Cost(port, x) == 0);
         }
     }
 }

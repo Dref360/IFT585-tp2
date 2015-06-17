@@ -15,7 +15,6 @@ namespace RouterNetwork
         private class LSNode : RoutingNode
         {
             public int Path { get; set; }
-            public LSSender Parent { private get; set; }
             public void BuildPath(LSNode other)
             {
                 int newCost = other.Cost + CostConfiguration.Cost(Id,other.Id);
@@ -32,7 +31,7 @@ namespace RouterNetwork
         {
             this.graph = graph;
         }
-        private IEnumerable<LSNode> Nodes;
+        private List<LSNode> Nodes;
         private IEnumerable<int> graph;
         private object nodesLock = new object();
 
@@ -41,13 +40,15 @@ namespace RouterNetwork
             var node = Table.Nodes.FirstOrDefault(x => x.Id == id);
             if(node == null)
             {
-                return int.MaxValue;
+                return 1000000;
             }
             else
             {
                 return node.Cost;
             }
         }
+
+
 
         public override void CreateRoutingTable()
         {
@@ -57,42 +58,53 @@ namespace RouterNetwork
                     Id = x,
                     Cost = BaseCost(x),
                     Path = -1,
-                    Parent = this
-                });
+                }).ToList();
             int numberOfNodes = Nodes.Count();
             while (numberOfNodes > processedNodes.Count)
             {
-                Console.WriteLine(processedNodes.Count);
+                //Console.WriteLine(processedNodes.Count);
                 var w = Nodes.Where(n => !processedNodes.Contains(n.Id)).Min();
-
+                
                 foreach (var node in Nodes.Where(v => v.Id != w.Id))
                 {
-                    w.BuildPath(node);
+                    node.BuildPath(w);
                 }
 
-                Console.WriteLine(String.Join(",", Nodes));
+                Console.WriteLine(String.Join(",", processedNodes));
                 processedNodes.Add(w.Id);
-            }
-        }
-        private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
-        {
-            foreach (var node in adjacentNodes)
-            {
-                SendMessage(new MessageArgs()
+                var minW = CostConfiguration.SameRouter(w.Id).Concat(new []{w.Id}).Select(p => Nodes.First(x => x.Id == p)).Min();
+                foreach (var port in CostConfiguration.SameRouter(w.Id))
+                {
+                    foreach (var x in Nodes)
                     {
-                        Receiver = node.Id
-                    });
-                yield return new AdjacencyTable(adjacentNodes, Ports.ToArray());
+                        if(x.Id == port && x.Id != minW.Id)
+                        {
+
+                            x.Cost = minW.Cost;
+                            x.Path = minW.Id;
+                        }
+                    }
+                }
             }
+            Console.WriteLine(GetRoute(17009));
         }
 
 
         protected override int GetRoute(int id)
         {
-            lock (nodesLock)
+            if (Ports.Any(i=>(id / 10) == (i / 10)))
             {
-                return Nodes.First(x => x.Id == id).Path;
+                return id;
             }
+            try
+            {
+                return GetRoute(Nodes.First(x => x.Id == id).Path);
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+            
         }
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)

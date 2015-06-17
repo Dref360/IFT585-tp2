@@ -11,7 +11,7 @@ namespace RouterNetwork
         static void Main(string[] args)
         {
             Console.WriteLine("Bonjour, quel algorithme voulez-vous utiliser?\n\t 1:LS\n\t 2:DV");
-            int algoType = int.Parse(Console.ReadLine());
+            int algoType = 1;//int.Parse(Console.ReadLine());
             //var guidA = Guid.NewGuid();
             //var guidB = Guid.NewGuid();
             //var guidC = Guid.NewGuid();
@@ -51,6 +51,28 @@ namespace RouterNetwork
                 InitializeRouters(tables, links, (t, l) => new DV(t, l, links.SelectMany(n => n)));
             }
             Console.Read();
+        }
+
+        private class AAAA
+        {
+            public int Test { get; set; }
+            public AAAA(int a)
+            {
+                Test = a;
+            }
+        }
+
+        static void Test()
+        {
+            var a = Enumerable.Range(1, 10).Select(x=>new AAAA(x)).ToList();
+            foreach (var x in a)
+            {
+                x.Test += 10;
+            }
+            foreach (var x in a)
+            {
+                Console.WriteLine(x.Test);
+            }
         }
 
         private static void ConfigureCost()
