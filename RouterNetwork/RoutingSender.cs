@@ -42,9 +42,9 @@ namespace RouterNetwork
             TcpClient client = new TcpClient(endPoint);
             client.Connect(IPAddress.Loopback, message.NextPoint);
             client.GetStream().Write(msg, 0, msg.Length);
+            Console.WriteLine("{0} : Sending a request", message.Sender);
             if (message.ExpectResponse)
             {
-                bool received = false;
                 byte[] data = new byte[65000];
                 var allBytes = new List<byte>();
                 var stream = client.GetStream();
@@ -57,6 +57,7 @@ namespace RouterNetwork
                         break;
                     allBytes.AddRange(data.Take(i));
                 }
+                Console.WriteLine("{0} : Received a response",message.Sender);
                 //Deserialize msg
                 return MessageArgs.DeserializeMessageArgs(allBytes.ToArray());
             }
@@ -76,6 +77,7 @@ namespace RouterNetwork
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
             TcpClient client = new TcpClient(endPoint);
             client.Connect(IPAddress.Loopback, message.NextPoint);
+            Console.WriteLine("{0} : Sending a request", message.Sender);
             client.GetStream().Write(msg, 0, msg.Length);
             client.Close();
         }
