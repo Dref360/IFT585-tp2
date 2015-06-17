@@ -20,22 +20,25 @@ namespace RouterNetwork
             //var guidF = Guid.NewGuid();
             var tables = new[] 
             {
-                new AdjacencyTable(new[] { new RoutingNode(15009, 5), new RoutingNode(18009, 45)},15001,18001),
+                new AdjacencyTable(new[] { new RoutingNode(15009, 5), new RoutingNode(18009, 45),new RoutingNode(20009,1)},15001,18001,20001),
                 new AdjacencyTable(new[] { new RoutingNode(15001, 5), new RoutingNode(16009, 70), new RoutingNode(11009, 3) },15009, 16001, 11001 ),
                 new AdjacencyTable(new[] { new RoutingNode(16001, 70), new RoutingNode(12001, 50), new RoutingNode(17009, 78) },16009, 12009, 17001 ),
                 new AdjacencyTable(new[] { new RoutingNode(18001, 45), new RoutingNode(12009, 50), new RoutingNode(19009, 8) },18009, 12001, 19001),
                 new AdjacencyTable(new[] { new RoutingNode(11001, 3), new RoutingNode(19001, 8), new RoutingNode(10009, 7) },11009, 19009, 10001 ),
-                new AdjacencyTable(new[] { new RoutingNode(17001, 78), new RoutingNode(10001, 7) },17009, 10009)
+                new AdjacencyTable(new[] { new RoutingNode(17001, 78), new RoutingNode(10001, 7),new RoutingNode(21009,1),  },17009, 10009,21001)/*,
+                new AdjacencyTable(new[] { new RoutingNode(20001, 1)},20009),
+                new AdjacencyTable(new[] { new RoutingNode(21001, 1)},21009)*/
             };
 
             var links = new[]
             {
-                new int[] { 15001, 18001 },
+                new int[] { 15001, 18001,20001 },
                 new int[] { 15009, 16001, 11001 },
                 new int[] { 16009, 12009, 17001 },
                 new int[] { 18009, 12001, 19001 },
                 new int[] { 11009, 19009, 10001 },
-                new int[] { 17009, 10009 }
+                new int[] { 17009, 10009,21001 },
+                new int[] { 20009,21009 },
             };
             ConfigureCost();
 
@@ -50,30 +53,12 @@ namespace RouterNetwork
             {
                 InitializeRouters(tables, links, (t, l) => new DV(t, l, links.SelectMany(n => n)));
             }
+            Host host1 = new Host(20009, 20001);
+            Host host2 = new Host(21009, 21001);
+            host1.SendMessage("Hello World", 21009);
             Console.Read();
         }
 
-        private class AAAA
-        {
-            public int Test { get; set; }
-            public AAAA(int a)
-            {
-                Test = a;
-            }
-        }
-
-        static void Test()
-        {
-            var a = Enumerable.Range(1, 10).Select(x=>new AAAA(x)).ToList();
-            foreach (var x in a)
-            {
-                x.Test += 10;
-            }
-            foreach (var x in a)
-            {
-                Console.WriteLine(x.Test);
-            }
-        }
 
         private static void ConfigureCost()
         {
@@ -81,6 +66,9 @@ namespace RouterNetwork
             CostConfiguration.AddCost(15001, 15009, 5);
             CostConfiguration.AddCost(18009, 18001, 45);
             CostConfiguration.AddCost(15001, 18001, 0);
+            //HostA
+            CostConfiguration.AddCost(20001, 15001, 0);
+            CostConfiguration.AddCost(20001, 18001, 0);
             //Routeur B
             CostConfiguration.AddCost(16001, 16009, 70);
             CostConfiguration.AddCost(11001, 11009, 3);
@@ -113,19 +101,24 @@ namespace RouterNetwork
             CostConfiguration.AddCost(17009, 17001, 78);
             CostConfiguration.AddCost(10009, 10001, 7);
             CostConfiguration.AddCost(17009, 10009, 0);
+            //HostB
+            CostConfiguration.AddCost(21001, 17009, 0);
+            CostConfiguration.AddCost(21001, 10009, 0);
         }
 
         static void InitializeRouters(IEnumerable<AdjacencyTable> tables, IEnumerable<int[]> links, Func<AdjacencyTable, int[], RoutingSender> creator)
         {
-            var routers = tables.Zip(links, (table, link) => new Router(creator(table, link)));
+            var routers = tables.Zip(links, (table, link) => new Router(creator(table, link))).ToArray();
             foreach (var router in routers)
             {
                 router.StartListening();
             }
+            List<Task> creatingTables = new List<Task>();
             foreach (var router in routers)
             {
-                router.Start();
+               creatingTables.Add(router.Start());
             }
+            Task.WaitAll(creatingTables.ToArray());
 
         }
     }

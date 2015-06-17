@@ -42,6 +42,7 @@ namespace RouterNetwork
                 Console.WriteLine(BitConverter.ToString(MessageArgs.DeserializeMessageArgs(allBytes.ToArray()).Data));
                 sock.Close();
             }
+            listener.Stop();
         }
 
         public void SendMessage(string msg, int host2)
@@ -53,7 +54,7 @@ namespace RouterNetwork
                 Data = System.Text.Encoding.Default.GetBytes(msg),
                 ExpectResponse = false,
                 NextPoint = RouterPort,
-                Header = Header.UPDATETABLE,
+                Header =(int) Header.UPDATETABLE,
                 Receiver = host2
             };
             TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Loopback,0));

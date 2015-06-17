@@ -80,7 +80,7 @@ namespace RouterNetwork
                         if(x.Id == port && x.Id != minW.Id)
                         {
 
-                            x.Cost = minW.Cost;
+                            x.Cost = minW.Cost + 1;
                             x.Path = minW.Id;
                         }
                     }
@@ -114,6 +114,7 @@ namespace RouterNetwork
             {
                 Console.WriteLine("Hey it's for us");
             }
+
             int whereWeWantToGo = message.Receiver;
             
             int nextStep = GetRoute(whereWeWantToGo);
@@ -124,17 +125,7 @@ namespace RouterNetwork
                 NextPoint = nextStep,Receiver = whereWeWantToGo
             });
 
-            var bf = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                bf.Serialize(ms, graph);
-                SendMessage(new MessageArgs()
-                {
-                    Data = ms.ToArray(),
-                    Receiver = message.Receiver,//Sender
-                });
-                return null;
-            }
+            return null;
         }
     }
 }

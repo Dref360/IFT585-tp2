@@ -33,9 +33,9 @@ namespace RouterNetwork
             listeners = new List<TcpListener>();
         }
 
-        public void Start()
+        public Task Start()
         {
-            Task.Factory.StartNew(sender.CreateRoutingTable);
+            return Task.Factory.StartNew(sender.CreateRoutingTable);
         }
 
 
@@ -61,9 +61,9 @@ namespace RouterNetwork
                 int i;
                 while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                 {
+                    allBytes.AddRange(bytes.Take(i));
                     if (!stream.DataAvailable)
                         break;
-                    allBytes.AddRange(bytes.Take(i));
                 }
                 var msg = MessageArgs.DeserializeMessageArgs(allBytes.ToArray());
                 var response = sender.HandleRoutingRequests(msg);

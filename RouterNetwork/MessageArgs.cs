@@ -2,19 +2,28 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace RouterNetwork
 {
+    [Serializable]
+    [DataContract]
     class MessageArgs
     {
+        [DataMember]
         public int Sender { get; set; }
+        [DataMember]
         public int Receiver { get; set; }
+        [DataMember]
         public int NextPoint { get; set; }
-        public Header Header { get; set; }
+        [DataMember]
+        public int Header { get; set; }
+        [DataMember]
         public byte[] Data { get; set; }
+        [DataMember]
         public bool ExpectResponse { get; set; }
 
         public static MessageArgs DeserializeMessageArgs(byte[] allBytes)
