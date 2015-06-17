@@ -22,7 +22,7 @@ namespace RouterNetwork
             /// </summary>
             /// <param name="routers">La liste de tous les routeurs</param>
             /// <param name="adjacencyTable">La table des routeurs adjacents</param>
-            public CostTable(IList<RoutingNode> routers, AdjacencyTable adjacencyTable)
+            public CostTable(IList<int> routers, AdjacencyTable adjacencyTable)
             {
                 IList<RoutingNode> adjacents = adjacencyTable.Nodes as IList<RoutingNode>;
                 rowDestination = new Dictionary<int, int>();
@@ -32,7 +32,7 @@ namespace RouterNetwork
                 //initailisation de la table de couts et des adjacents/destination
                 for (int i = 0; i < routers.Count; i++)
                 {
-                    rowDestination.Add(routers[i].Port, i);
+                    rowDestination.Add(routers[i], i);
                     for (int j = 0; j < adjacents.Count; j++)
                         costs[i, j] = int.MaxValue;
                 }
@@ -113,21 +113,21 @@ namespace RouterNetwork
             }
         }
 
+        IEnumerable<int> allPorts;
+        CostTable costTable;
 
 
         public DV(AdjacencyTable table, int[] ports, IEnumerable<int> ids)
             : base(table, ports)
         {
-
+            this.allPorts = ids;
         }
-
-        CostTable costTable;
 
         public override void CreateRoutingTable()
         {
-            //FAUT POGNER LA LISTE DES ROUTEURS
-            costTable = new CostTable(null/*hihi*/, Table);
+            costTable = new CostTable(allPorts.ToList(), Table);
             SendTable();
+            Console.WriteLine("Table de routage initiale créée");
         }
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
@@ -135,6 +135,7 @@ namespace RouterNetwork
             CostTable otherCosts = ReceiveMessage(message);
             if (costTable.UpdateTable(message.Sender,otherCosts))
                 SendTable();
+            Console.WriteLine("Table de routage mis à jour");
             return null;
         }
 
