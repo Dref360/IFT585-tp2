@@ -40,10 +40,7 @@ namespace RouterNetwork
 
             if (algoType == 1)
             {
-                InitializeRouters(tables.Take(1), links.Take(1), (t, l) =>
-                    new LSSender(t, l,
-                        tables.Select(x => 
-                            new AdjacencyTable(x.Nodes.Select(y => new RoutingNode(y.Port, int.MaxValue)),l))));
+                InitializeRouters(tables, links, (t, l) => new LSSender(t, l, links.SelectMany(x=>x)));
             }
             else if (algoType == 2)
             {

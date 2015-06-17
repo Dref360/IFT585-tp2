@@ -11,12 +11,12 @@ namespace RouterNetwork
     class AdjacencyTable
     {
         [DataMember]
-        public RouterId routerId { get; set; }
+        public int[] Ports { get; set; }
         [DataMember]
         public IEnumerable<RoutingNode> Nodes { get; private set; }
         public AdjacencyTable(IEnumerable<RoutingNode> nodes,params int[] ports)
         {
-            routerId = new RouterId(ports);
+            Ports = ports;
             Nodes = nodes;
         }
     }

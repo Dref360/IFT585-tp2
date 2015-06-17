@@ -14,40 +14,36 @@ namespace RouterNetwork
     {
         private class LSNode : RoutingNode
         {
-            public int OldRoute { get; set; }
+            public int Path { get; set; }
             public LSSender Parent { private get; set; }
             public void BuildPath(LSNode other)
             {
-                int newCost = other.Cost + Parent.Cost(this.Port, other.Port);
-                if (Parent.IsAdjacent(this.Port, other.Port) && newCost < this.Cost)
+                int newCost = other.Cost + Parent.Cost(this.Id, other.Id);
+                if (IsAdjacent(other) && newCost < this.Cost)
                 {
-                    OldRoute = other.Port;
+                    Path = other.Id;
                     this.Cost = newCost;
                 }
             }
         }
 
-        public LSSender(AdjacencyTable table, int[] ports, IEnumerable<AdjacencyTable> graph)
+        public LSSender(AdjacencyTable table, int[] ports, IEnumerable<int> graph)
             : base(table, ports)
         {
             this.graph = graph;
         }
 
-        bool IsAdjacent(int a, int b)
+        int Cost<T>(T a, T b)
         {
-            return true;
-           // return graph.First(x => x == a).Nodes.Any(x => x.RouterId == b);
-        }
-        int Cost(int a, int b)
-        {
-            var node = graph.First(x => x.Id == a).Nodes.FirstOrDefault(x => x.RouterId == b);
-            if(node == null)
+            /*
+            //var node = graph.First(x => x.Id == a).Nodes.FirstOrDefault(x => x.Id == b);
+            if (node == null)
             {
                 return int.MaxValue;
             }
 
             int cost = node.Cost;
-            if(cost != int.MaxValue)
+            if (cost != int.MaxValue)
             {
                 return cost;
             }
@@ -56,23 +52,24 @@ namespace RouterNetwork
                 /*var message =  SendMessageWithAnswer(new MessageArgs()
                     {
                         Receiver = b
-                    });*/
+                    });
                 int costAB = 0;
                 node.Cost = costAB;
-                return node.Cost;
-            }
+                return node.Cost;*/
+            return 0;
+            
         }
         private IEnumerable<LSNode> Nodes;
-        private IEnumerable<AdjacencyTable> graph;
+        private IEnumerable<int> graph;
         private object nodesLock = new object();
         public override void CreateRoutingTable()
         {
             var processedNodes = new HashSet<LSNode>();
             Nodes = graph.Select(x => new LSNode()
                 {
-                    RouterId = x.Id,
+                    Id = x,
                     Cost = int.MaxValue,
-                    OldRoute = new int(),
+                    Path = -1,
                     Parent = this
                 });
             int numberOfNodes = Nodes.Count();
@@ -81,12 +78,12 @@ namespace RouterNetwork
                 Console.WriteLine(processedNodes.Count);
                 var w = Nodes.Where(n => !processedNodes.Contains(n)).Min();
 
-                    foreach (var node in Nodes.Where(v => v.RouterId != w.RouterId))
-                    {
-                        w.BuildPath(node);
+                foreach (var node in Nodes.Where(v => v.Id != w.Id))
+                {
+                    w.BuildPath(node);
                 }
-                
-                Console.WriteLine(String.Join(",",Nodes));
+
+                Console.WriteLine(String.Join(",", Nodes));
                 processedNodes.Add(w);
             }
         }
@@ -96,9 +93,9 @@ namespace RouterNetwork
             {
                 SendMessage(new MessageArgs()
                     {
-                        Receiver = node.RouterId
+                        Receiver = node.Id
                     });
-                yield return new AdjacencyTable(adjacentNodes,Ports.ToArray());
+                yield return new AdjacencyTable(adjacentNodes, Ports.ToArray());
             }
         }
 
@@ -107,7 +104,7 @@ namespace RouterNetwork
         {
             lock (nodesLock)
             {
-                return Nodes.First(x => x.RouterId == id).OldRoute;
+                return Nodes.First(x => x.Id == id).Path;
             }
         }
 

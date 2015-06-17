@@ -11,12 +11,12 @@ namespace RouterNetwork
     class RoutingNode : IComparable<RoutingNode>
     {
         [DataMember]
-        public int Port { get; set; }
+        public int Id { get; set; }
         [DataMember]
         public int Cost { get; set; }
         public override int GetHashCode()
         {
-            return Port.GetHashCode();
+            return Id.GetHashCode();
         }
 
         public override string ToString()
@@ -29,9 +29,14 @@ namespace RouterNetwork
             return Cost.CompareTo(other.Cost);
         }
 
-        public RoutingNode(int routerId, int cost)
+        public bool IsAdjacent(RoutingNode other)
         {
-            Port = routerId;
+            return (Id / 10) == (other.Id / 10);
+        }
+
+        public RoutingNode(int port, int cost)
+        {
+            Id = port;
             Cost = cost;
         }
 

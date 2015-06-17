@@ -38,8 +38,8 @@ namespace RouterNetwork
                 }
                 for (int i = 0; i < adjacents.Count; i++)
                 {
-                    columnAdjacent.Add(adjacents[i].Port, i);
-                    this[adjacents[i].Port, adjacents[i].Port] = adjacents[i].Cost;
+                    columnAdjacent.Add(adjacents[i].Id, i);
+                    this[adjacents[i].Id, adjacents[i].Id] = adjacents[i].Cost;
                 }
             }
 
@@ -78,7 +78,7 @@ namespace RouterNetwork
                     if (this[destination, adjacent] < path.Cost)
                     {
                         path.Cost = this[destination, adjacent];
-                        path.Port = adjacent;
+                        path.Id = adjacent;
                     }
                 }
                 return path;
@@ -91,7 +91,7 @@ namespace RouterNetwork
             public void Poison(RoutingNode adjacent)
             {
                 foreach (int destination in rowDestination.Keys)
-                    this[destination, adjacent.Port] = int.MaxValue;
+                    this[destination, adjacent.Id] = int.MaxValue;
             }
 
             /// <summary>
@@ -141,7 +141,7 @@ namespace RouterNetwork
 
         protected override int GetRoute(int id)
         {
-            return costTable.BestPath(id).Port;
+            return costTable.BestPath(id).Id;
         }
 
         private void SendTable()
@@ -158,8 +158,8 @@ namespace RouterNetwork
                     SendMessage(new MessageArgs()
                     {
                         Data = ms.ToArray(),
-                        Receiver = adjacent.Port,
-                        NextPoint = adjacent.Port
+                        Receiver = adjacent.Id,
+                        NextPoint = adjacent.Id
                     });
                 }
             }
