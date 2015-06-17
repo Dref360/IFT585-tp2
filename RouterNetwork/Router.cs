@@ -18,12 +18,11 @@ namespace RouterNetwork
     enum Header
     {
         NEW = 0,
-        UPDATE =1,
+        UPDATETABLE =1,
         DATA = 2
     }
     class Router
     {
-        private Dictionary<Guid, int> routersPort;
         private List<TcpListener> listeners; 
 
         private RoutingSender sender;
@@ -52,6 +51,7 @@ namespace RouterNetwork
 
         private void AcceptConnection(TcpListener listener)
         {
+            listener.Start();
             while (true)
             {
                 byte[] bytes = new byte[64000];
@@ -59,12 +59,10 @@ namespace RouterNetwork
                 var stream = sock.GetStream();
                 List<byte> allBytes = new List<byte>(64000);
                 int i;
-                bool received = false;
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0 || !received)
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                 {
-                    if (i == 0)
-                        continue;
-                    received = true;
+                    if (!stream.DataAvailable)
+                        break;
                     allBytes.AddRange(bytes.Take(i));
                 }
                 var msg = MessageArgs.DeserializeMessageArgs(allBytes.ToArray());

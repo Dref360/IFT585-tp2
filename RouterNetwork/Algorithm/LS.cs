@@ -14,14 +14,14 @@ namespace RouterNetwork
     {
         private class LSNode : RoutingNode
         {
-            public Guid OldRoute { get; set; }
+            public int OldRoute { get; set; }
             public LSSender Parent { private get; set; }
             public void BuildPath(LSNode other)
             {
-                int newCost = other.Cost + Parent.Cost(this.RouterId, other.RouterId);
-                if (Parent.IsAdjacent(this.RouterId, other.RouterId) && newCost < this.Cost)
+                int newCost = other.Cost + Parent.Cost(this.Port, other.Port);
+                if (Parent.IsAdjacent(this.Port, other.Port) && newCost < this.Cost)
                 {
-                    OldRoute = other.RouterId;
+                    OldRoute = other.Port;
                     this.Cost = newCost;
                 }
             }
@@ -33,11 +33,12 @@ namespace RouterNetwork
             this.graph = graph;
         }
 
-        bool IsAdjacent(Guid a, Guid b)
+        bool IsAdjacent(int a, int b)
         {
-            return graph.First(x => x.Id == a).Nodes.Any(x => x.RouterId == b);
+            return true;
+           // return graph.First(x => x == a).Nodes.Any(x => x.RouterId == b);
         }
-        int Cost(Guid a, Guid b)
+        int Cost(int a, int b)
         {
             var node = graph.First(x => x.Id == a).Nodes.FirstOrDefault(x => x.RouterId == b);
             if(node == null)
@@ -71,7 +72,7 @@ namespace RouterNetwork
                 {
                     RouterId = x.Id,
                     Cost = int.MaxValue,
-                    OldRoute = new Guid(),
+                    OldRoute = new int(),
                     Parent = this
                 });
             int numberOfNodes = Nodes.Count();
@@ -97,12 +98,12 @@ namespace RouterNetwork
                     {
                         Receiver = node.RouterId
                     });
-                yield return new AdjacencyTable(new Guid(), adjacentNodes);
+                yield return new AdjacencyTable(new int(), adjacentNodes);
             }
         }
 
 
-        protected override Guid GetRoute(Guid id)
+        protected override int GetRoute(int id)
         {
             lock (nodesLock)
             {

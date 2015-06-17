@@ -11,17 +11,17 @@ namespace RouterNetwork
     class RoutingNode : IComparable<RoutingNode>
     {
         [DataMember]
-        public Guid RouterId { get; set; }
+        public int Port { get; set; }
         [DataMember]
         public int Cost { get; set; }
         public override int GetHashCode()
         {
-            return RouterId.GetHashCode();
+            return Port.GetHashCode();
         }
 
         public override string ToString()
         {
-            return "{ Guid : " + RouterId + ", Cost : " + ((Cost==int.MaxValue)?"inf.":Cost.ToString()) + " }";
+            return "{ Guid : " + "" + ", Cost : " + ((Cost==int.MaxValue)?"inf.":Cost.ToString()) + " }";
         }
 
         public int CompareTo(RoutingNode other)
@@ -29,9 +29,9 @@ namespace RouterNetwork
             return Cost.CompareTo(other.Cost);
         }
 
-        public RoutingNode(Guid routerId, int cost)
+        public RoutingNode(int routerId, int cost)
         {
-            RouterId = routerId;
+            Port = routerId;
             Cost = cost;
         }
 

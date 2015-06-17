@@ -13,35 +13,33 @@ namespace RouterNetwork
         [Serializable]
         private class CostTable
         {
-            private Guid id;
             private int[,] costs;
-            private Dictionary<Guid /*Destination*/, int /*row*/> rowDestination;
-            private Dictionary<Guid /*Adjacent*/, int /*column*/> columnAdjacent;
+            private Dictionary<int /*Destination*/, int /*row*/> rowDestination;
+            private Dictionary<int /*Adjacent*/, int /*column*/> columnAdjacent;
 
             /// <summary>
             /// Construction de la table et initialisation des couts de base
             /// </summary>
             /// <param name="routers">La liste de tous les routeurs</param>
             /// <param name="adjacencyTable">La table des routeurs adjacents</param>
-            public CostTable(IList<RoutingNode> routers, AdjacencyTable adjacencyTable)
+            public CostTable(IList<int> routers, AdjacencyTable adjacencyTable)
             {
-                id = adjacencyTable.Id;
                 IList<RoutingNode> adjacents = adjacencyTable.Nodes as IList<RoutingNode>;
-                rowDestination = new Dictionary<Guid, int>();
-                columnAdjacent = new Dictionary<Guid, int>();
+                rowDestination = new Dictionary<int, int>();
+                columnAdjacent = new Dictionary<int, int>();
                 costs = new int[routers.Count, adjacents.Count];
 
                 //initailisation de la table de couts et des adjacents/destination
                 for (int i = 0; i < routers.Count; i++)
                 {
-                    rowDestination.Add(routers[i].RouterId, i);
+                    rowDestination.Add(routers[i], i);
                     for (int j = 0; j < adjacents.Count; j++)
                         costs[i, j] = int.MaxValue;
                 }
                 for (int i = 0; i < adjacents.Count; i++)
                 {
-                    columnAdjacent.Add(adjacents[i].RouterId, i);
-                    this[adjacents[i].RouterId, adjacents[i].RouterId] = adjacents[i].Cost;
+                    columnAdjacent.Add(adjacents[i].Port, i);
+                    this[adjacents[i].Port, adjacents[i].Port] = adjacents[i].Cost;
                 }
             }
 
@@ -50,17 +48,17 @@ namespace RouterNetwork
             /// </summary>
             /// <param name="otherTable">Table adjacente</param>
             /// <returns>Vrai si on doit envoyer sa table à tous les adjacents</returns>
-            public bool UpdateTable(CostTable otherTable)
+            public bool UpdateTable(int sender,CostTable otherTable)
             {
                 bool send = false;
-                foreach (Guid destination in rowDestination.Keys)
+                foreach (int destination in rowDestination.Keys)
                 {
-                    int otherCost = otherTable.BestPath(destination).Cost + this[destination, otherTable.id];
+                    int otherCost = otherTable.BestPath(destination).Cost + this[destination, sender];
                     if (otherCost < BestPath(destination).Cost)
                     {
                         send = true;
                     }
-                    this[destination, otherTable.id] = otherCost;
+                    this[destination, sender] = otherCost;
                 }
                 return send;
             }
@@ -70,17 +68,17 @@ namespace RouterNetwork
             /// </summary>
             /// <param name="destination">La destination</param>
             /// <returns>Le Node adjacent à prendre</returns>
-            public RoutingNode BestPath(Guid destination)
+            public RoutingNode BestPath(int destination)
             {
                 RoutingNode path = new RoutingNode();
                 path.Cost = int.MaxValue;
 
-                foreach (Guid adjacent in columnAdjacent.Keys)
+                foreach (int adjacent in columnAdjacent.Keys)
                 {
                     if (this[destination, adjacent] < path.Cost)
                     {
                         path.Cost = this[destination, adjacent];
-                        path.RouterId = adjacent;
+                        path.Port = adjacent;
                     }
                 }
                 return path;
@@ -92,8 +90,8 @@ namespace RouterNetwork
             /// <param name="adjacent"></param>
             public void Poison(RoutingNode adjacent)
             {
-                foreach (Guid destination in rowDestination.Keys)
-                    this[destination, adjacent.RouterId] = int.MaxValue;
+                foreach (int destination in rowDestination.Keys)
+                    this[destination, adjacent.Port] = int.MaxValue;
             }
 
             /// <summary>
@@ -102,7 +100,7 @@ namespace RouterNetwork
             /// <param name="destination">routeur destination</param>
             /// <param name="adjacent">routeur adjacent</param>
             /// <returns></returns>
-            public int this[Guid destination, Guid adjacent]
+            public int this[int destination, int adjacent]
             {
                 get
                 {
@@ -115,34 +113,35 @@ namespace RouterNetwork
             }
         }
 
+        IEnumerable<int> allPorts;
+        CostTable costTable;
 
 
-        public DV(AdjacencyTable table, int[] ports, IEnumerable<Guid> ids)
+        public DV(AdjacencyTable table, int[] ports, IEnumerable<int> ids)
             : base(table, ports)
         {
-
+            this.allPorts = ids;
         }
-
-        CostTable costTable;
 
         public override void CreateRoutingTable()
         {
-            //FAUT POGNER LA LISTE DES ROUTEURS
-            costTable = new CostTable(null/*hihi*/, Table);
+            costTable = new CostTable(allPorts.ToList(), Table);
             SendTable();
+            Console.WriteLine("Table de routage initiale créée");
         }
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
             CostTable otherCosts = ReceiveMessage(message);
-            if (costTable.UpdateTable(otherCosts))
+            if (costTable.UpdateTable(message.Sender,otherCosts))
                 SendTable();
+            Console.WriteLine("Table de routage mis à jour");
             return null;
         }
 
-        protected override Guid GetRoute(Guid id)
+        protected override int GetRoute(int id)
         {
-            return costTable.BestPath(id).RouterId;
+            return costTable.BestPath(id).Port;
         }
 
         private void SendTable()
@@ -159,7 +158,8 @@ namespace RouterNetwork
                     SendMessage(new MessageArgs()
                     {
                         Data = ms.ToArray(),
-                        Receiver = adjacent.RouterId
+                        Receiver = adjacent.Port,
+                        NextPoint = adjacent.Port
                     });
                 }
             }
