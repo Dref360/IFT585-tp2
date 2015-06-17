@@ -49,11 +49,12 @@ namespace RouterNetwork
                 var allBytes = new List<byte>();
                 var stream = client.GetStream();
                 int i;
-                while ((i = stream.Read(data, 0, data.Length)) != 0 || !received)
+                while ((i = stream.Read(data, 0, data.Length)) != 0)
                 {
                     if (i == 0)
                         continue;
-                    received = true;
+                    if (!stream.DataAvailable)
+                        break;
                     allBytes.AddRange(data.Take(i));
                 }
                 //Deserialize msg

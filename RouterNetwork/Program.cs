@@ -36,6 +36,7 @@ namespace RouterNetwork
                 new int[] { 11009, 19009, 10001 },
                 new int[] { 17009, 10009 }
             };
+            CostConfiguration.AllPorts = links.SelectMany(n => n).ToList();//Donne tous les ports de tous le monde
 
             if (algoType == 1)
             {
