@@ -21,7 +21,7 @@ namespace RouterNetwork
 
         public override string ToString()
         {
-            return "{ Guid : " + "" + ", Cost : " + ((Cost==int.MaxValue)?"inf.":Cost.ToString()) + " }";
+            return "{ Idd : " + Id + ", Cost : " + ((Cost==int.MaxValue)?"inf.":Cost.ToString()) + " }";
         }
 
         public int CompareTo(RoutingNode other)
