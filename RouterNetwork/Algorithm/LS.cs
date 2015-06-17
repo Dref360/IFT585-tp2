@@ -97,6 +97,21 @@ namespace RouterNetwork
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
+            Console.WriteLine("We got a message");
+            if (Ports.Contains(message.Receiver))
+            {
+                Console.WriteLine("Hey it's for us");
+            }
+            int whereWeWantToGo = message.Receiver;
+            
+            int nextStep = GetRoute(whereWeWantToGo);
+            Console.WriteLine("Next Step: {0}",nextStep);
+            SendMessage(new MessageArgs()
+            {
+                Data = message.Data,ExpectResponse = false,Header = message.Header,
+                NextPoint = nextStep,Receiver = whereWeWantToGo
+            });
+
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
             {
