@@ -12,10 +12,8 @@ namespace RouterNetwork
     {
         int Port { get; set; }
         int RouterPort { get; set; }
-        Guid HostGuid { get; set; }
-        public Host(int port, int routerPort,Guid guid)
+        public Host(int port, int routerPort)
         {
-            HostGuid = guid;
             Port = port;
             RouterPort = routerPort;
             Task.Factory.StartNew(AcceptConnection);
@@ -40,18 +38,20 @@ namespace RouterNetwork
                     allBytes.AddRange(bytes.Take(i));
                 }
                 Console.WriteLine("Message recu!");
-                Console.WriteLine(BitConverter.ToString(allBytes.ToArray()));
+                Console.WriteLine(BitConverter.ToString(MessageArgs.DeserializeMessageArgs(allBytes.ToArray()).Data));
                 sock.Close();
             }
         }
 
-        public void SendMessage(string msg, Guid host2)
+        public void SendMessage(string msg, int host2)
         {
+            
             MessageArgs argsMsg = new MessageArgs()
             {
-                Sender = HostGuid,
+                Sender = Port,
                 Data = System.Text.Encoding.Default.GetBytes(msg),
                 ExpectResponse = false,
+                NextPoint = RouterPort,
                 Header = new byte[] { 1},Receiver = host2
             };
             TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Loopback,0));

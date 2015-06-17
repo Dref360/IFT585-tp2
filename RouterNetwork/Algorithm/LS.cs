@@ -14,13 +14,13 @@ namespace RouterNetwork
     {
         private class LSNode : RoutingNode
         {
-            public Guid OldRoute { get; set; }
-            public void BuildPath(LSNode other)
+            public int OldRoute { get; set; }
+            public void BuildPath(LSNode other,LSSender sender)
             {
-                int newCost = other.Cost + Cost(this.RouterId, other.RouterId);
-                if (IsAdjacent(this.RouterId, other.RouterId) && newCost < this.Cost)
+                int newCost = other.Cost + sender.Cost(this.Port, other.Port);
+                if (IsAdjacent(this.Port, other.Port) && newCost < this.Cost)
                 {
-                    OldRoute = other.RouterId;
+                    OldRoute = other.Port;
                     this.Cost = newCost;
                 }
             }
@@ -32,12 +32,15 @@ namespace RouterNetwork
             this.graph = graph.ToList();
         }
 
-        static bool IsAdjacent(Guid a, Guid b)
+        static bool IsAdjacent(int a, int b)
         {
             return true;
         }
-        static int Cost(Guid a, Guid b)
+        int Cost(int a, int b)
         {
+            //Si on veut le chemin vers le meme routeur
+            if (Ports.Contains(a) && Ports.Contains(b))
+                return 0;
             return 0;
         }
         private IEnumerable<LSNode> Nodes;
@@ -55,7 +58,7 @@ namespace RouterNetwork
                 {
                     foreach (var node in Nodes.Where(v => v != w))
                     {
-                        w.BuildPath(node);
+                        w.BuildPath(node,this);
                     }
                 }
                 processedNodes.Add(w);
@@ -67,18 +70,18 @@ namespace RouterNetwork
             {
                 SendMessage(new MessageArgs()
                     {
-                        Receiver = node.RouterId
+                        Receiver = node.Port
                     });
-                yield return new AdjacencyTable(new Guid(), adjacentNodes);
+                yield return new AdjacencyTable(adjacentNodes);
             }
         }
 
 
-        protected override Guid GetRoute(Guid id)
+        protected override int GetRoute(int port)
         {
             lock (nodesLock)
             {
-                return Nodes.First(x => x.RouterId == id).OldRoute;
+                return Nodes.First(x => x.Port == port).OldRoute;
             }
         }
 
@@ -91,7 +94,8 @@ namespace RouterNetwork
                 SendMessage(new MessageArgs()
                 {
                     Data = ms.ToArray(),
-                    Receiver = message.Receiver,//Sender
+                    Receiver = message.Receiver,
+                    NextPoint = GetRoute(message.Receiver)//Sender
                 });
                 return null;
             }

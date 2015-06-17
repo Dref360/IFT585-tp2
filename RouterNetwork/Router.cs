@@ -23,7 +23,6 @@ namespace RouterNetwork
     }
     class Router
     {
-        private Dictionary<Guid, int> routersPort;
         private List<TcpListener> listeners; 
 
         private RoutingSender sender;

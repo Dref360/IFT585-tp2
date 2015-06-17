@@ -10,8 +10,9 @@ namespace RouterNetwork
 {
     class MessageArgs
     {
-        public Guid Sender { get; set; }
-        public Guid Receiver { get; set; }
+        public int Sender { get; set; }
+        public int Receiver { get; set; }
+        public int NextPoint { get; set; }
         public byte[] Header { get; set; }
         public byte[] Data { get; set; }
         public bool ExpectResponse { get; set; }

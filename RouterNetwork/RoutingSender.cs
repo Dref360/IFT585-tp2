@@ -12,8 +12,7 @@ namespace RouterNetwork
 {
     abstract class RoutingSender
     {
-        private Guid Id;
-        private Dictionary<Guid, int> routerPorts;
+        private int Id;
         protected AdjacencyTable Table { get; set; }
         private int p1;
         private int p2;
@@ -26,23 +25,22 @@ namespace RouterNetwork
         public RoutingSender(AdjacencyTable table, int[] ports)
         {
             Table = table;
-            routerPorts = new Dictionary<Guid, int>();
             Ports = ports.ToList();
         }
 
 
         public MessageArgs SendMessageWithAnswer(MessageArgs message)
         {
-            if (!routerPorts.ContainsKey(message.Receiver))
+            if (!Ports.Any(n => n/10 == message.NextPoint/10))
             {
                 Console.WriteLine("On a pas ce routeur (Bruno que fais-tu?)");
                 return null;
             }
-            message.Sender = this.Id;
+            message.Sender = Ports.First(n => n / 10 == message.NextPoint / 10);
             byte[] msg = message.SerializeMsg();
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
             TcpClient client = new TcpClient(endPoint);
-            client.Connect(IPAddress.Loopback, routerPorts[message.Receiver]);
+            client.Connect(IPAddress.Loopback, message.NextPoint);
             client.GetStream().Write(msg, 0, msg.Length);
             if (message.ExpectResponse)
             {
@@ -67,31 +65,26 @@ namespace RouterNetwork
 
         public void SendMessage(MessageArgs message)
         {
-            if (!routerPorts.ContainsKey(message.Receiver))
+            if (!Ports.Any(n => n / 10 == message.NextPoint / 10))
             {
                 Console.WriteLine("On a pas ce routeur (Bruno que fais-tu?)");
                 return;
             }
-            message.Sender = this.Id;
+            message.Sender = Ports.First(n => n / 10 == message.NextPoint / 10);
             byte[] msg = message.SerializeMsg();
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 0);
             TcpClient client = new TcpClient(endPoint);
-            client.Connect(IPAddress.Loopback, routerPorts[message.Receiver]);
+            client.Connect(IPAddress.Loopback, message.NextPoint);
             client.GetStream().Write(msg, 0, msg.Length);
             client.Close();
-        }
-
-        public void Link(Guid router, int port)
-        {
-            routerPorts[router] = port;
         }
 
         /// <summary>
         /// Retourne la route optimal à prendre
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="port"></param>
         /// <returns></returns>
-        abstract protected Guid GetRoute(Guid id);
+        abstract protected int GetRoute(int port);
         /// <summary>
         /// Traite les requêtes de table de routage
         /// </summary>
