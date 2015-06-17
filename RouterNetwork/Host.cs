@@ -39,7 +39,7 @@ namespace RouterNetwork
                     allBytes.AddRange(bytes.Take(i));
                 }
                 Console.WriteLine("Message recu!");
-                Console.WriteLine(BitConverter.ToString(MessageArgs.DeserializeMessageArgs(allBytes.ToArray()).Data));
+                Console.WriteLine(System.Text.Encoding.Default.GetString(MessageArgs.DeserializeMessageArgs(allBytes.ToArray()).Data));
                 sock.Close();
             }
             listener.Stop();

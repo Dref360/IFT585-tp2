@@ -69,6 +69,7 @@ namespace RouterNetwork
             //HostA
             CostConfiguration.AddCost(20001, 15001, 0);
             CostConfiguration.AddCost(20001, 18001, 0);
+            CostConfiguration.AddCost(20001, 20009, 1);
             //Routeur B
             CostConfiguration.AddCost(16001, 16009, 70);
             CostConfiguration.AddCost(11001, 11009, 3);
@@ -102,6 +103,7 @@ namespace RouterNetwork
             CostConfiguration.AddCost(10009, 10001, 7);
             CostConfiguration.AddCost(17009, 10009, 0);
             //HostB
+            CostConfiguration.AddCost(21009,21001,1);
             CostConfiguration.AddCost(21001, 17009, 0);
             CostConfiguration.AddCost(21001, 10009, 0);
         }
