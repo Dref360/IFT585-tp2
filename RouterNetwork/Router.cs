@@ -51,6 +51,7 @@ namespace RouterNetwork
 
         private void AcceptConnection(TcpListener listener)
         {
+            listener.Start();
             while (true)
             {
                 byte[] bytes = new byte[64000];

@@ -22,6 +22,7 @@ namespace RouterNetwork
         private void AcceptConnection()
         {
             TcpListener listener = new TcpListener(IPAddress.Loopback,Port);
+            listener.Start();
             while (true)
             {
                 byte[] bytes = new byte[64000];
