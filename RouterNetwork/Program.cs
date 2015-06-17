@@ -20,12 +20,12 @@ namespace RouterNetwork
             //var guidF = Guid.NewGuid();
             var tables = new[] 
             {
-                new AdjacencyTable(new[] { new RoutingNode(15009, 5), new RoutingNode(18009, 45) }),
-                new AdjacencyTable(new[] { new RoutingNode(15001, 5), new RoutingNode(16009, 70), new RoutingNode(11009, 3) }),
-                new AdjacencyTable(new[] { new RoutingNode(16001, 70), new RoutingNode(12001, 50), new RoutingNode(17009, 78) }),
-                new AdjacencyTable(new[] { new RoutingNode(18001, 45), new RoutingNode(12009, 50), new RoutingNode(19009, 8) }),
-                new AdjacencyTable(new[] { new RoutingNode(11001, 3), new RoutingNode(19001, 8), new RoutingNode(10009, 7) }),
-                new AdjacencyTable(new[] { new RoutingNode(17001, 78), new RoutingNode(10001, 7) })
+                new AdjacencyTable(new[] { new RoutingNode(15009, 5), new RoutingNode(18009, 45)},15001,18001),
+                new AdjacencyTable(new[] { new RoutingNode(15001, 5), new RoutingNode(16009, 70), new RoutingNode(11009, 3) },15009, 16001, 11001 ),
+                new AdjacencyTable(new[] { new RoutingNode(16001, 70), new RoutingNode(12001, 50), new RoutingNode(17009, 78) },16009, 12009, 17001 ),
+                new AdjacencyTable(new[] { new RoutingNode(18001, 45), new RoutingNode(12009, 50), new RoutingNode(19009, 8) },18009, 12001, 19001),
+                new AdjacencyTable(new[] { new RoutingNode(11001, 3), new RoutingNode(19001, 8), new RoutingNode(10009, 7) },11009, 19009, 10001 ),
+                new AdjacencyTable(new[] { new RoutingNode(17001, 78), new RoutingNode(10001, 7) },17009, 10009)
             };
             var links = new[]
             {
@@ -43,7 +43,7 @@ namespace RouterNetwork
                 InitializeRouters(tables.Take(1), links.Take(1), (t, l) =>
                     new LSSender(t, l,
                         tables.Select(x => 
-                            new AdjacencyTable(x.Nodes.Select(y => new RoutingNode(y.Port, int.MaxValue))))));
+                            new AdjacencyTable(x.Nodes.Select(y => new RoutingNode(y.Port, int.MaxValue)),l))));
             }
             else if (algoType == 2)
             {

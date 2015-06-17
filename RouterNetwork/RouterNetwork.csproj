@@ -52,6 +52,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Router.cs" />
+    <Compile Include="RouterId.cs" />
     <Compile Include="RoutingNode.cs" />
     <Compile Include="RoutingSender.cs" />
   </ItemGroup>

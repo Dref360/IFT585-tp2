@@ -84,7 +84,7 @@ namespace RouterNetwork
                     foreach (var node in Nodes.Where(v => v.RouterId != w.RouterId))
                     {
                         w.BuildPath(node);
-                    }
+                }
                 
                 Console.WriteLine(String.Join(",",Nodes));
                 processedNodes.Add(w);
@@ -98,7 +98,7 @@ namespace RouterNetwork
                     {
                         Receiver = node.RouterId
                     });
-                yield return new AdjacencyTable(new int(), adjacentNodes);
+                yield return new AdjacencyTable(adjacentNodes,Ports.ToArray());
             }
         }
 
