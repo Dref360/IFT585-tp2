@@ -15,13 +15,7 @@ namespace RouterNetwork
         private Guid Id;
         private Dictionary<Guid, int> routerPorts;
         protected AdjacencyTable Table { get; set; }
-        private int p1;
-        private int p2;
-        private int p3;
         public List<int> Ports { get; set; }
-
-        
-
 
         public RoutingSender(AdjacencyTable table, int[] ports)
         {

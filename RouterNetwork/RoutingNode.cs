@@ -19,6 +19,11 @@ namespace RouterNetwork
             return RouterId.GetHashCode();
         }
 
+        public override string ToString()
+        {
+            return "{ Guid : " + RouterId + ", Cost : " + ((Cost==int.MaxValue)?"inf.":Cost.ToString()) + " }";
+        }
+
         public int CompareTo(RoutingNode other)
         {
             return Cost.CompareTo(other.Cost);

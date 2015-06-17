@@ -15,10 +15,11 @@ namespace RouterNetwork
         private class LSNode : RoutingNode
         {
             public Guid OldRoute { get; set; }
+            public LSSender Parent { private get; set; }
             public void BuildPath(LSNode other)
             {
-                int newCost = other.Cost + Cost(this.RouterId, other.RouterId);
-                if (IsAdjacent(this.RouterId, other.RouterId) && newCost < this.Cost)
+                int newCost = other.Cost + Parent.Cost(this.RouterId, other.RouterId);
+                if (Parent.IsAdjacent(this.RouterId, other.RouterId) && newCost < this.Cost)
                 {
                     OldRoute = other.RouterId;
                     this.Cost = newCost;
@@ -29,35 +30,62 @@ namespace RouterNetwork
         public LSSender(AdjacencyTable table, int[] ports, IEnumerable<AdjacencyTable> graph)
             : base(table, ports)
         {
-            this.graph = graph.ToList();
+            this.graph = graph;
         }
 
-        static bool IsAdjacent(Guid a, Guid b)
+        bool IsAdjacent(Guid a, Guid b)
         {
-            return true;
+            return graph.First(x => x.Id == a).Nodes.Any(x => x.RouterId == b);
         }
-        static int Cost(Guid a, Guid b)
+        int Cost(Guid a, Guid b)
         {
-            return 0;
+            var node = graph.First(x => x.Id == a).Nodes.FirstOrDefault(x => x.RouterId == b);
+            if(node == null)
+            {
+                return int.MaxValue;
+            }
+
+            int cost = node.Cost;
+            if(cost != int.MaxValue)
+            {
+                return cost;
+            }
+            else
+            {
+                /*var message =  SendMessageWithAnswer(new MessageArgs()
+                    {
+                        Receiver = b
+                    });*/
+                int costAB = 0;
+                node.Cost = costAB;
+                return node.Cost;
+            }
         }
         private IEnumerable<LSNode> Nodes;
-        private List<AdjacencyTable> graph;
+        private IEnumerable<AdjacencyTable> graph;
         private object nodesLock = new object();
         public override void CreateRoutingTable()
         {
             var processedNodes = new HashSet<LSNode>();
-            Nodes = Table.Nodes.Cast<LSNode>();
+            Nodes = graph.Select(x => new LSNode()
+                {
+                    RouterId = x.Id,
+                    Cost = int.MaxValue,
+                    OldRoute = new Guid(),
+                    Parent = this
+                });
             int numberOfNodes = Nodes.Count();
             while (numberOfNodes > processedNodes.Count)
             {
+                Console.WriteLine(processedNodes.Count);
                 var w = Nodes.Where(n => !processedNodes.Contains(n)).Min();
-                lock (nodesLock)
-                {
-                    foreach (var node in Nodes.Where(v => v != w))
+
+                    foreach (var node in Nodes.Where(v => v.RouterId != w.RouterId))
                     {
                         w.BuildPath(node);
                     }
-                }
+                
+                Console.WriteLine(String.Join(",",Nodes));
                 processedNodes.Add(w);
             }
         }

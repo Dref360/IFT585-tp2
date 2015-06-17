@@ -39,7 +39,7 @@ namespace RouterNetwork
 
             if (algoType == 1)
             {
-                InitializeRouters(tables, links, (t, l) =>
+                InitializeRouters(tables.Take(1), links.Take(1), (t, l) =>
                     new LSSender(t, l,
                         tables.Select(x => 
                             new AdjacencyTable(x.Id, x.Nodes.Select(y => new RoutingNode(y.RouterId, int.MaxValue))))));
@@ -48,6 +48,7 @@ namespace RouterNetwork
             {
                 InitializeRouters(tables, links, (t, l) => new DV(t, l, tables.Select(x => x.Id)));
             }
+            Console.Read();
         }
 
         static void InitializeRouters(IEnumerable<AdjacencyTable> tables, IEnumerable<int[]> links, Func<AdjacencyTable, int[], RoutingSender> creator)
