@@ -72,7 +72,7 @@ namespace RouterNetwork
                     {
                         Receiver = node.Port
                     });
-                yield return new AdjacencyTable(adjacentNodes);
+                yield return new AdjacencyTable(adjacentNodes,Ports.ToArray());
             }
         }
 
