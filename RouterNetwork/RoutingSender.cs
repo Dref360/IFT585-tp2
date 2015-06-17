@@ -14,12 +14,12 @@ namespace RouterNetwork
     {
         private int Id;
         protected AdjacencyTable Table { get; set; }
-        public List<int> Ports { get; set; }
+        public IEnumerable<int> Ports { get; set; }
 
         public RoutingSender(AdjacencyTable table, int[] ports)
         {
             Table = table;
-            Ports = ports.ToList();
+            Ports = ports;
         }
 
 

@@ -18,7 +18,7 @@ namespace RouterNetwork
             public LSSender Parent { private get; set; }
             public void BuildPath(LSNode other)
             {
-                int newCost = other.Cost + Parent.Cost(this.Id, other.Id);
+                int newCost = other.Cost + CostConfiguration.Cost(Id,other.Id);
                 if (IsAdjacent(other) && newCost < this.Cost)
                 {
                     Path = other.Id;
@@ -32,43 +32,30 @@ namespace RouterNetwork
         {
             this.graph = graph;
         }
-
-        int Cost<T>(T a, T b)
-        {
-            /*
-            //var node = graph.First(x => x.Id == a).Nodes.FirstOrDefault(x => x.Id == b);
-            if (node == null)
-            {
-                return int.MaxValue;
-            }
-
-            int cost = node.Cost;
-            if (cost != int.MaxValue)
-            {
-                return cost;
-            }
-            else
-            {
-                /*var message =  SendMessageWithAnswer(new MessageArgs()
-                    {
-                        Receiver = b
-                    });
-                int costAB = 0;
-                node.Cost = costAB;
-                return node.Cost;*/
-            return 0;
-            
-        }
         private IEnumerable<LSNode> Nodes;
         private IEnumerable<int> graph;
         private object nodesLock = new object();
+
+        private int BaseCost(int id)
+        {
+            var node = Table.Nodes.FirstOrDefault(x => x.Id == id);
+            if(node == null)
+            {
+                return int.MaxValue;
+            }
+            else
+            {
+                return node.Cost;
+            }
+        }
+
         public override void CreateRoutingTable()
         {
-            var processedNodes = new HashSet<LSNode>();
+            var processedNodes = new HashSet<int>(Ports);
             Nodes = graph.Select(x => new LSNode()
                 {
                     Id = x,
-                    Cost = int.MaxValue,
+                    Cost = BaseCost(x),
                     Path = -1,
                     Parent = this
                 });
@@ -76,7 +63,7 @@ namespace RouterNetwork
             while (numberOfNodes > processedNodes.Count)
             {
                 Console.WriteLine(processedNodes.Count);
-                var w = Nodes.Where(n => !processedNodes.Contains(n)).Min();
+                var w = Nodes.Where(n => !processedNodes.Contains(n.Id)).Min();
 
                 foreach (var node in Nodes.Where(v => v.Id != w.Id))
                 {
@@ -84,7 +71,7 @@ namespace RouterNetwork
                 }
 
                 Console.WriteLine(String.Join(",", Nodes));
-                processedNodes.Add(w);
+                processedNodes.Add(w.Id);
             }
         }
         private IEnumerable<AdjacencyTable> CreateGlobalAdjacencyTable(IEnumerable<RoutingNode> adjacentNodes)
