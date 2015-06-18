@@ -67,9 +67,10 @@ namespace RouterNetwork
                 bool send = false;
                 foreach (int destination in rowDestination.Keys)
                 {
-                    if (destination != sender && otherTable.BestPath(destination).Id != 0)
+                    RoutingNode otherBestPath = otherTable.BestPath(destination);
+                    if (destination != sender && otherBestPath.Id != 0)
                     {
-                        int otherCost = otherTable.BestPath(destination).Cost + this[sender, sender];
+                        int otherCost = otherBestPath.Cost + this[sender, sender];
                         if (otherCost < BestPath(destination).Cost)
                         {
                             send = true;
@@ -148,14 +149,13 @@ namespace RouterNetwork
         {
             costTable = new CostTable(allPorts.ToList(), Table);
             Console.WriteLine("Table de routage initiale créée");
-            Thread.Sleep(8000);
             SendTable();
         }
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
-            if (costTable == null)
-                Console.WriteLine("ERROR");
+            while (costTable == null)
+                Thread.Sleep(1);
             if (message.Header == 0)
             {
                 //Console.WriteLine("Laisse moi updater pls");
