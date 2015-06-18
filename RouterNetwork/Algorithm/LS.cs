@@ -70,7 +70,6 @@ namespace RouterNetwork
                     node.BuildPath(w);
                 }
 
-                Console.WriteLine(String.Join(",", processedNodes));
                 processedNodes.Add(w.Id);
                 var minW = CostConfiguration.SameRouter(w.Id).Concat(new []{w.Id}).Select(p => Nodes.First(x => x.Id == p)).Min();
                 foreach (var port in CostConfiguration.SameRouter(w.Id))

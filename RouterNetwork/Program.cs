@@ -112,6 +112,7 @@ namespace RouterNetwork
 
         static void InitializeRouters(IEnumerable<AdjacencyTable> tables, IEnumerable<int[]> links, Func<AdjacencyTable, int[], RoutingSender> creator)
         {
+            Console.WriteLine("Creating Tables");
             var routers = tables.Zip(links, (table, link) => new Router(creator(table, link))).ToArray();
             foreach (var router in routers)
             {
@@ -123,6 +124,9 @@ namespace RouterNetwork
                creatingTables.Add(router.Start());
             }
             Task.WaitAll(creatingTables.ToArray());
+            Thread.Sleep(500);
+            Console.Out.Flush();
+            Console.WriteLine("Tables done!");
 
         }
     }

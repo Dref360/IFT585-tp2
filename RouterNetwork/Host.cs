@@ -38,7 +38,7 @@ namespace RouterNetwork
                     received = true;
                     allBytes.AddRange(bytes.Take(i));
                 }
-                Console.WriteLine("Message recu!");
+                Console.WriteLine("Host : {0} received a message", Port);
                 Console.WriteLine(System.Text.Encoding.Default.GetString(MessageArgs.DeserializeMessageArgs(allBytes.ToArray()).Data));
                 sock.Close();
             }
@@ -57,11 +57,13 @@ namespace RouterNetwork
                 Header =(int) Header.UPDATETABLE,
                 Receiver = host2
             };
+            Console.WriteLine("Host : {0} send a message", Port);
             TcpClient client = new TcpClient(new IPEndPoint(IPAddress.Loopback,0));
             client.Connect(IPAddress.Loopback,RouterPort);
             var data = argsMsg.SerializeMsg();
             client.GetStream().Write(data,0,data.Length);
             client.Close();
+            
         }
 
 
