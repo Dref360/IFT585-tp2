@@ -4,12 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace RouterNetwork
 {
     class DV : RoutingSender
     {
+        private const int infini = 1000000;
+
         [Serializable]
         private class CostTable
         {
@@ -34,13 +36,25 @@ namespace RouterNetwork
                 {
                     rowDestination.Add(routers[i], i);
                     for (int j = 0; j < adjacents.Count; j++)
-                        costs[i, j] = int.MaxValue;
+                        costs[i, j] = infini;
                 }
                 for (int i = 0; i < adjacents.Count; i++)
                 {
                     columnAdjacent.Add(adjacents[i].Id, i);
                     this[adjacents[i].Id, adjacents[i].Id] = adjacents[i].Cost;
                 }
+            }
+
+            /// <summary>
+            /// Constructeur de copie
+            /// </summary>
+            /// <param name="table"></param>
+            public CostTable(CostTable table)
+            {
+                this.costs = new int[table.rowDestination.Count, table.columnAdjacent.Count];
+                Array.Copy(table.costs, this.costs, table.costs.Length);
+                this.rowDestination = table.rowDestination;
+                this.columnAdjacent = table.columnAdjacent;
             }
 
             /// <summary>
@@ -53,12 +67,15 @@ namespace RouterNetwork
                 bool send = false;
                 foreach (int destination in rowDestination.Keys)
                 {
-                    int otherCost = otherTable.BestPath(destination).Cost + this[destination, sender];
-                    if (otherCost < BestPath(destination).Cost)
+                    if (destination != sender && otherTable.BestPath(destination).Id != 0)
                     {
-                        send = true;
+                        int otherCost = otherTable.BestPath(destination).Cost + this[sender, sender];
+                        if (otherCost < BestPath(destination).Cost)
+                        {
+                            send = true;
+                        }
+                        this[destination, sender] = Math.Min(infini, otherCost);
                     }
-                    this[destination, sender] = otherCost;
                 }
                 return send;
             }
@@ -71,7 +88,8 @@ namespace RouterNetwork
             public RoutingNode BestPath(int destination)
             {
                 RoutingNode path = new RoutingNode();
-                path.Cost = int.MaxValue;
+                path.Cost = infini;
+                path.Id = 0;
 
                 foreach (int adjacent in columnAdjacent.Keys)
                 {
@@ -85,13 +103,16 @@ namespace RouterNetwork
             }
 
             /// <summary>
-            /// Empoisonne les couts de la table pour un routeur adjacent
+            /// Créé une nouvelle table empoisonné à partir de la table courante
             /// </summary>
             /// <param name="adjacent"></param>
-            public void Poison(RoutingNode adjacent)
+            /// <returns></returns>
+            public CostTable CreatePoisonedTable(RoutingNode adjacent)
             {
+                CostTable poisonedTable = new CostTable(this);
                 foreach (int destination in rowDestination.Keys)
-                    this[destination, adjacent.Id] = int.MaxValue;
+                    poisonedTable[destination, adjacent.Id] = infini;
+                return poisonedTable;
             }
 
             /// <summary>
@@ -126,16 +147,39 @@ namespace RouterNetwork
         public override void CreateRoutingTable()
         {
             costTable = new CostTable(allPorts.ToList(), Table);
-            SendTable();
             Console.WriteLine("Table de routage initiale créée");
+            Thread.Sleep(8000);
+            SendTable();
         }
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
-            CostTable otherCosts = ReceiveMessage(message);
-            if (costTable.UpdateTable(message.Sender,otherCosts))
-                SendTable();
-            Console.WriteLine("Table de routage mis à jour");
+            if (costTable == null)
+                Console.WriteLine("ERROR");
+            if (message.Header == 0)
+            {
+                //Console.WriteLine("Laisse moi updater pls");
+                CostTable otherCosts = ReceiveMessage(message);
+                if (costTable.UpdateTable(message.Sender, otherCosts))
+                {
+                    SendTable();
+                    //Console.WriteLine("Table mis à jour, envoie de la table");
+                }
+                //Console.WriteLine("Fin de l'update");
+            }
+            else if (message.Header == 1)
+            {
+                int nextStep = costTable.BestPath(message.Receiver).Id;
+                Console.WriteLine("Next Step: {0}", nextStep);
+                SendMessage(new MessageArgs()
+                {
+                    Data = message.Data,
+                    ExpectResponse = false,
+                    Header = message.Header,
+                    NextPoint = nextStep,
+                    Receiver = message.Receiver
+                });
+            }
             return null;
         }
 
@@ -148,8 +192,9 @@ namespace RouterNetwork
         {
             foreach (RoutingNode adjacent in Table.Nodes)
             {
-                CostTable poisonedTable = costTable;
-                poisonedTable.Poison(adjacent);
+                if (adjacent.Id == 20009 || adjacent.Id == 21009)
+                    break;
+                CostTable poisonedTable = costTable.CreatePoisonedTable(adjacent);
 
                 BinaryFormatter bf = new BinaryFormatter();
                 using (var ms = new MemoryStream())

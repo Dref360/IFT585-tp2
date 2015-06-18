@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RouterNetwork
@@ -11,7 +12,7 @@ namespace RouterNetwork
         static void Main(string[] args)
         {
             Console.WriteLine("Bonjour, quel algorithme voulez-vous utiliser?\n\t 1:LS\n\t 2:DV");
-            int algoType = 1;//int.Parse(Console.ReadLine());
+            int algoType = int.Parse(Console.ReadLine());
             //var guidA = Guid.NewGuid();
             //var guidB = Guid.NewGuid();
             //var guidC = Guid.NewGuid();
@@ -55,6 +56,7 @@ namespace RouterNetwork
             }
             Host host1 = new Host(20009, 20001);
             Host host2 = new Host(21009, 21001);
+            Thread.Sleep(5000);
             host1.SendMessage("Hello World", 21009);
             Console.Read();
         }
