@@ -59,6 +59,10 @@ namespace RouterNetwork
             return null;
         }
 
+        protected byte[] GetPortsByte(int port)
+        {
+            return System.Text.Encoding.Default.GetBytes(string.Format("{0}->", port));
+        }
         public void SendMessage(MessageArgs message)
         {
             if (!Ports.Any(n => n / 10 == message.NextPoint / 10))

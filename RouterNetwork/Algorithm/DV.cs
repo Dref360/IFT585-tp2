@@ -154,6 +154,7 @@ namespace RouterNetwork
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
+            Console.WriteLine("{0} : We got a message",message.NextPoint);
             while (costTable == null)
                 Thread.Sleep(1);
             if (message.Header == 0)
@@ -173,7 +174,7 @@ namespace RouterNetwork
                 Console.WriteLine("Next Step: {0}", nextStep);
                 SendMessage(new MessageArgs()
                 {
-                    Data = message.Data,
+                    Data = GetPortsByte(message.NextPoint).Concat(message.Data).ToArray(),
                     ExpectResponse = false,
                     Header = message.Header,
                     NextPoint = nextStep,

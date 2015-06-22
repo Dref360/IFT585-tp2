@@ -108,7 +108,7 @@ namespace RouterNetwork
 
         public override MessageArgs HandleRoutingRequests(MessageArgs message)
         {
-            Console.WriteLine("We got a message");
+            Console.WriteLine("{0} : We got a message",message.NextPoint);
             if (Ports.Contains(message.Receiver))
             {
                 Console.WriteLine("Hey it's for us");
@@ -120,7 +120,7 @@ namespace RouterNetwork
             Console.WriteLine("Next Step: {0}",nextStep);
             SendMessage(new MessageArgs()
             {
-                Data = message.Data,ExpectResponse = false,Header = message.Header,
+                Data = GetPortsByte(message.NextPoint).Concat(message.Data).ToArray(),ExpectResponse = false,Header = message.Header,
                 NextPoint = nextStep,Receiver = whereWeWantToGo
             });
 
